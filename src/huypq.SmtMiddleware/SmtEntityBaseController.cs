@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using huypq.SmtShared;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using QueryBuilder;
@@ -13,38 +14,6 @@ namespace huypq.SmtMiddleware
         where EntityType : class, SmtIEntity
         where DtoType : class, SmtIDto
     {
-        #region define class
-        [ProtoBuf.ProtoContract]
-        public class PagingResultDto<T>
-        {
-            [ProtoBuf.ProtoMember(1)]
-            public int TotalItemCount { get; set; }
-            [ProtoBuf.ProtoMember(2)]
-            public int PageIndex { get; set; }
-            [ProtoBuf.ProtoMember(3)]
-            public int PageCount { get; set; }
-            [ProtoBuf.ProtoMember(4)]
-            public List<T> Items { get; set; }
-            [ProtoBuf.ProtoMember(5)]
-            public long VersionNumber { get; set; }
-            [ProtoBuf.ProtoMember(6)]
-            public string ErrorMsg { get; set; }
-            [ProtoBuf.ProtoMember(7)]
-            public long ServerStartTime { get; set; }
-            [ProtoBuf.ProtoMember(8)]
-            public int PageSize { get; set; }
-        }
-
-        public class ChangeState
-        {
-            public const int Original = 0;
-            public const int Add = 1;
-            public const int Delete = 2;
-            public const int Update = 3;
-        }
-
-        #endregion
-
         private static object _versionNumberLock = new object();
 
         private static Dictionary<int, long> VersionNumbers = new Dictionary<int, long>();
@@ -212,17 +181,17 @@ namespace huypq.SmtMiddleware
 
                 switch (dto.State)
                 {
-                    case ChangeState.Add:
+                    case DtoState.Add:
                         entity.TenantID = TokenModel.TenantId;
                         DBContext.Set<EntityType>().Add(entity);
                         break;
-                    case ChangeState.Update:
+                    case DtoState.Update:
                         if (entity.TenantID == TokenModel.TenantId)
                         {
                             UpdateEntity(DBContext, entity);
                         }
                         break;
-                    case ChangeState.Delete:
+                    case DtoState.Delete:
                         if (entity.TenantID == TokenModel.TenantId)
                         {
                             DBContext.Set<EntityType>().Remove(entity);
