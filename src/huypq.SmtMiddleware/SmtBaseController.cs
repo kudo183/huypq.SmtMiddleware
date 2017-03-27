@@ -43,7 +43,7 @@ namespace huypq.SmtMiddleware
                     result = CreateUser(parameter["loginname"].ToString(), parameter["displayname"].ToString(), parameter["pass"].ToString());
                     break;
                 case "userlogin":
-                    result = UserLogin(parameter["user"].ToString(), parameter["pass"].ToString());
+                    result = UserLogin(parameter["tenant"].ToString(), parameter["user"].ToString(), parameter["pass"].ToString());
                     break;
                 case "userlogout":
                     result = UserLogout();
@@ -202,14 +202,20 @@ namespace huypq.SmtMiddleware
             return CreateObjectResult("OK");
         }
 
-        public SmtActionResult UserLogin(string user, string pass)
+        public SmtActionResult UserLogin(string tenant, string user, string pass)
         {
-            if (string.IsNullOrEmpty(user) || string.IsNullOrEmpty(pass))
+            if (string.IsNullOrEmpty(tenant) || string.IsNullOrEmpty(user) || string.IsNullOrEmpty(pass))
             {
                 return CreateStatusResult(System.Net.HttpStatusCode.Unauthorized);
             }
 
-            var userEntity = _context.SmtUser.FirstOrDefault(p => p.Email == user);
+            var tenantEntity = _context.SmtTenant.FirstOrDefault(p => p.TenantName == tenant);
+            if (tenantEntity == null)
+            {
+                return CreateStatusResult(System.Net.HttpStatusCode.Unauthorized);
+            }
+
+            var userEntity = _context.SmtUser.FirstOrDefault(p => p.Email == user && p.TenantID == tenantEntity.ID);
             if (userEntity == null)
             {
                 return CreateStatusResult(System.Net.HttpStatusCode.Unauthorized);
