@@ -17,6 +17,10 @@ namespace huypq.SmtMiddlewareTest
         public int TenantID { get; set; }
         public long TokenValidTime { get; set; }
         public string UserName { get; set; }
+        public long LastUpdateTime { get; set; }
+        public bool IsConfirmed { get; set; }
+
+        public bool IsLocked { get; set; }
 
         public ICollection<SmtUserClaim> SmtUserClaimUserIDNavigation { get; set; }
 

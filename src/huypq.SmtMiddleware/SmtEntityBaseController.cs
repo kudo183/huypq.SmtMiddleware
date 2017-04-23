@@ -14,35 +14,6 @@ namespace huypq.SmtMiddleware
         where EntityType : class, SmtIEntity
         where DtoType : class, SmtIDto
     {
-        private static object _versionNumberLock = new object();
-
-        private static Dictionary<int, long> VersionNumbers = new Dictionary<int, long>();
-
-        public static void IncreaseVersionNumber(int groupId)
-        {
-            lock (_versionNumberLock)
-            {
-                long versionNumber;
-                if (VersionNumbers.TryGetValue(groupId, out versionNumber) == false)
-                {
-                    VersionNumbers.Add(groupId, 1);
-                }
-
-                VersionNumbers[groupId] = versionNumber + 1;
-            }
-        }
-
-        private long GetVersionNumber()
-        {
-            long versionNumber;
-            if (VersionNumbers.TryGetValue(TokenModel.TenantId, out versionNumber) == false)
-            {
-                return 0;
-            }
-
-            return versionNumber;
-        }
-
         private ContextType _context;
         protected ContextType DBContext
         {
@@ -52,26 +23,22 @@ namespace huypq.SmtMiddleware
             }
         }
 
-        protected SmtActionResult SaveChanges()
+        protected SmtActionResult SaveChanges(List<DtoType> items, List<EntityType> changedEntities)
         {
             try
             {
                 var changeCount = DBContext.SaveChanges();
-                if (changeCount > 0)
-                {
-                    IncreaseVersionNumber(TokenModel.TenantId);
-                }
-                AfterSave();
+                AfterSave(items, changedEntities);
             }
             catch (Exception ex)
             {
                 return CreateStatusResult(System.Net.HttpStatusCode.InternalServerError);
             }
             //need return an json object, if just return status code, jquery will treat as fail.
-            return CreateObjectResult("OK");
+            return CreateOKResult();
         }
 
-        public override void Init(SmtTokenModel token, IApplicationBuilder app, HttpContext context, string requestType)
+        public override void Init(TokenManager.LoginToken token, IApplicationBuilder app, HttpContext context, string requestType)
         {
             base.Init(token, app, context, requestType);
             _context = (ContextType)Context.RequestServices.GetService(typeof(ContextType));
@@ -118,23 +85,19 @@ namespace huypq.SmtMiddleware
                 Items = new List<DtoType>()
             };
 
-            result.VersionNumber = GetVersionNumber();
-            result.ServerStartTime = SmtSettings.ServerStartTime;
             var pageSize = GetPageSize();
 
             if (filter != null)
             {
-                if (result.ServerStartTime == filter.ServerStartTime
-                    && result.VersionNumber == filter.VersionNumber)
-                {
-                    return CreateObjectResult(result);
-                }
-
                 if (filter.PageIndex > 0)
                 {
                     if (filter.PageSize > pageSize)
                     {
                         filter.PageSize = pageSize;
+                    }
+                    if (filter.OrderOptions.Count == 0)
+                    {
+                        filter.OrderOptions.Add(SmtSettings.Instance.DefaultOrderOption);
                     }
                     query = QueryExpression.AddQueryExpression(
                     query, ref filter, out pageCount);
@@ -159,6 +122,7 @@ namespace huypq.SmtMiddleware
                 return CreateObjectResult(result);
             }
 
+            result.LastUpdateTime = DateTime.UtcNow.Ticks;
             foreach (var entity in query)
             {
                 result.Items.Add(ConvertToDto(entity));
@@ -175,26 +139,30 @@ namespace huypq.SmtMiddleware
 
         protected SmtActionResult Save(List<DtoType> items)
         {
+            List<EntityType> changedEntities = new List<EntityType>();
             foreach (var dto in items)
             {
                 var entity = ConvertToEntity(dto);
-
+                entity.LastUpdateTime = DateTime.UtcNow.Ticks;
                 switch (dto.State)
                 {
                     case DtoState.Add:
-                        entity.TenantID = TokenModel.TenantId;
+                        entity.TenantID = TokenModel.TenantID;
                         DBContext.Set<EntityType>().Add(entity);
+                        changedEntities.Add(entity);
                         break;
                     case DtoState.Update:
-                        if (entity.TenantID == TokenModel.TenantId)
+                        if (entity.TenantID == TokenModel.TenantID)
                         {
                             UpdateEntity(DBContext, entity);
+                            changedEntities.Add(entity);
                         }
                         break;
                     case DtoState.Delete:
-                        if (entity.TenantID == TokenModel.TenantId)
+                        if (entity.TenantID == TokenModel.TenantID)
                         {
                             DBContext.Set<EntityType>().Remove(entity);
+                            changedEntities.Add(entity);
                         }
                         break;
                     default:
@@ -202,52 +170,56 @@ namespace huypq.SmtMiddleware
                 }
             }
 
-            return SaveChanges();
+            return SaveChanges(items, changedEntities);
         }
 
         protected SmtActionResult Add(DtoType dto)
         {
+            dto.State = DtoState.Add;
             var entity = ConvertToEntity(dto);
-            entity.TenantID = TokenModel.TenantId;
-
+            entity.TenantID = TokenModel.TenantID;
+            entity.LastUpdateTime = DateTime.UtcNow.Ticks;
             DBContext.Set<EntityType>().Add(entity);
 
-            return SaveChanges();
+            return SaveChanges(new List<DtoType>() { dto }, new List<EntityType>() { entity });
         }
 
         protected SmtActionResult Update(DtoType dto)
         {
+            dto.State = DtoState.Update;
             var entity = ConvertToEntity(dto);
-            if (entity.TenantID != TokenModel.TenantId)
+            entity.LastUpdateTime = DateTime.UtcNow.Ticks;
+            if (entity.TenantID != TokenModel.TenantID)
             {
                 return CreateStatusResult(System.Net.HttpStatusCode.Unauthorized);
             }
 
             UpdateEntity(DBContext, entity);
 
-            return SaveChanges();
+            return SaveChanges(new List<DtoType>() { dto }, new List<EntityType>() { entity });
         }
 
         protected SmtActionResult Delete(DtoType dto)
         {
+            dto.State = DtoState.Delete;
             var entity = ConvertToEntity(dto);
-            if (entity.TenantID != TokenModel.TenantId)
+            if (entity.TenantID != TokenModel.TenantID)
             {
                 return CreateStatusResult(System.Net.HttpStatusCode.Unauthorized);
             }
 
             DBContext.Set<EntityType>().Remove(entity);
 
-            return SaveChanges();
+            return SaveChanges(new List<DtoType>() { dto }, new List<EntityType>() { entity });
         }
         #endregion
-        
+
         public abstract EntityType ConvertToEntity(DtoType dto);
         public abstract DtoType ConvertToDto(EntityType entity);
 
         protected virtual IQueryable<EntityType> GetQuery()
         {
-            return DBContext.Set<EntityType>().Where(p => p.TenantID == TokenModel.TenantId);
+            return DBContext.Set<EntityType>().Where(p => p.TenantID == TokenModel.TenantID);
         }
 
         protected virtual int GetMaxItemAllowed()
@@ -281,7 +253,7 @@ namespace huypq.SmtMiddleware
             context.Entry(entity).State = EntityState.Modified;
         }
 
-        protected virtual void AfterSave()
+        protected virtual void AfterSave(List<DtoType> items, List<EntityType> changedEntities)
         {
 
         }

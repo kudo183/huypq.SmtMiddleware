@@ -7,36 +7,56 @@ namespace huypq.SmtMiddleware
     {
         private static readonly SmtSettings _instance = new SmtSettings()
         {
+            DefaultUserPassword = "12345678",
             DefaultPageSize = 50,
+            DefaultOrderOption = new QueryBuilder.OrderByExpression.OrderOption() { PropertyPath = "ID", IsAscending = false },
             MaxItemAllowed = 1000,
             AllowAnonymousActions = new List<string>(),
+            DefaultPermissions = new Dictionary<string, List<string>>(),
             JsonSerializer = new SmtJsonSerializer(),
-            BinarySerializer = new SmtProtobufSerializer()
+            BinarySerializer = new SmtProtobufSerializer(),
+            EmailFolderPath = @"c:\emails"
         };
-
-        //because javascript max number is 53 bit, so need substract some date to make this number smaller
-        public static long ServerStartTime = DateTime.UtcNow.Ticks - new DateTime(2015, 1, 1).Ticks;
-
+        
         public static SmtSettings Instance
         {
             get { return _instance; }
         }
 
         /// <summary>
-        /// Result paging size
+        /// Default user password
+        /// </summary>
+        public string DefaultUserPassword { get; set; }
+
+        /// <summary>
+        /// Email folder path
+        /// </summary>
+        public string EmailFolderPath { get; set; }
+
+        /// <summary>
+        /// Default page size
         /// </summary>
         public int DefaultPageSize { get; set; }
 
         /// <summary>
-        /// Result paging size
+        /// Default order option
+        /// </summary>
+        public QueryBuilder.OrderByExpression.OrderOption DefaultOrderOption { get; set; }
+
+        /// <summary>
+        /// Max Item Allowed per request
         /// </summary>
         public int MaxItemAllowed { get; set; }
-        
+
         /// <summary>
-        /// Specify list of action which allow anonymous user
-        /// Default is contain "user.register" for register acion
+        /// Specify list of action which allow anonymous user (not check Header["token"])
         /// </summary>
         public List<string> AllowAnonymousActions { get; set; }
+
+        /// <summary>
+        /// Specify list of action which is allowed for logged in user
+        /// </summary>
+        public Dictionary<string, List<string>> DefaultPermissions { get; set; }
 
         /// <summary>
         /// Use for deserialize request parameter and serialize response if Header["response"]="json"

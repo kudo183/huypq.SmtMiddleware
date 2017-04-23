@@ -21,5 +21,8 @@ namespace huypq.SmtMiddlewareTest
         public ICollection<SmtUser> SmtUserTenantIDNavigation { get; set; }
         public ICollection<SmtUserClaim> SmtUserClaimTenantIDNavigation { get; set; }
 
+        public bool IsConfirmed { get; set; }
+
+        public bool IsLocked { get; set; }
     }
 }

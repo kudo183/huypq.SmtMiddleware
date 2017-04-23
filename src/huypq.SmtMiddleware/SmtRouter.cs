@@ -1,5 +1,5 @@
-﻿using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.DataProtection;
+﻿using huypq.SmtMiddleware.Constant;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
@@ -27,16 +27,31 @@ namespace huypq.SmtMiddleware
         private IApplicationBuilder _app;
 
         private string _controllerNamespacePattern;
-        private readonly string _smtController = "smt";
-        private readonly string _register = "register";
-        private readonly string _tenantLogin = "tenantlogin";
-        private readonly string _userLogin = "userlogin";
+        private const string SmtController = "smt";
+
+        private readonly List<string> SmtControllerAnonymousActions = new List<string>()
+        {
+            ActionName.Register,
+            ActionName.TenantLogin,
+            ActionName.UserLogin,
+            ActionName.TenantRequestToken,
+            ActionName.UserRequestToken,
+            ActionName.ConfirmEmail,
+            ActionName.ResetPassword
+        };
+
+        private readonly List<string> SmtControllerActionPermissions = new List<string>()
+        {
+            ActionName.ChangePassword,
+            ActionName.Logout
+        };
 
         public SmtRouter(IApplicationBuilder app, string controllerNamespacePattern)
         {
             _app = app;
             _controllerNamespacePattern = controllerNamespacePattern;
             _router = new RouteHandler(SmtRouteHandler);
+            TokenManager.ServiceProvider = _app.ApplicationServices;
         }
 
         private async Task SmtRouteHandler(HttpContext context)
@@ -114,20 +129,11 @@ namespace huypq.SmtMiddleware
 
             try
             {
-                if (_smtController == controller)
+                if (SmtController == controller)
                 {
-                    if (_register == action || _tenantLogin == action || _userLogin == action)//skip check token
+                    if (SmtControllerAnonymousActions.Contains(action) == true)//skip check token
                     {
                         result = ControllerInvoker(controller, action, parameter, null, requestType, context);
-                        if (_tenantLogin == action || _userLogin == action)
-                        {
-                            if (result.StatusCode == System.Net.HttpStatusCode.OK)
-                            {
-                                var protector = _app.ApplicationServices.GetDataProtector("token");
-                                var base64PlainToken = (result.ResultValue as SmtTokenModel).ToBase64();
-                                result.ResultValue = protector.Protect(base64PlainToken);
-                            }
-                        }
                     }
                     else
                     {
@@ -149,7 +155,8 @@ namespace huypq.SmtMiddleware
             {
                 result = new SmtActionResult
                 {
-                    StatusCode = System.Net.HttpStatusCode.Unauthorized
+                    StatusCode = System.Net.HttpStatusCode.Unauthorized,
+                    ResultValue = "CryptographicException"
                 };
             }
             catch (Exception ex)
@@ -166,20 +173,17 @@ namespace huypq.SmtMiddleware
             string controllerName, string actionName, Dictionary<string, object> parameter,
             string tokenText, string requestType, HttpContext context)
         {
-            SmtTokenModel token = null;
+            TokenManager.LoginToken token = null;
             if (string.IsNullOrEmpty(tokenText) == false)
             {
-                var protector = _app.ApplicationServices.GetDataProtector("token");
-
-                var base64PlainToken = protector.Unprotect(tokenText);
-                token = SmtTokenModel.FromBase64(base64PlainToken);
+                token = TokenManager.LoginToken.VerifyTokenString(tokenText);
                 if (CheckTokenValid(token, context) == false)
                 {
-                    return new SmtActionResult { StatusCode = System.Net.HttpStatusCode.Unauthorized };
+                    return new SmtActionResult { StatusCode = System.Net.HttpStatusCode.Unauthorized, ResultValue = "CheckTokenValid" };
                 }
                 if (CheckActionPermission(controllerName, actionName, token) == false)
                 {
-                    return new SmtActionResult { StatusCode = System.Net.HttpStatusCode.Unauthorized };
+                    return new SmtActionResult { StatusCode = System.Net.HttpStatusCode.Unauthorized, ResultValue = "CheckActionPermission" };
                 }
             }
 
@@ -241,19 +245,19 @@ namespace huypq.SmtMiddleware
             }
         }
 
-        private bool CheckTokenValid(SmtTokenModel token, HttpContext context)
+        private bool CheckTokenValid(TokenManager.LoginToken token, HttpContext context)
         {
             var dbContext = (ContextType)context.RequestServices.GetService(typeof(ContextType));
-            if (token.UserId == 0)
+            if (token.IsTenant)
             {
-                if (dbContext.SmtTenant.Any(p => p.ID == token.TenantId && p.TokenValidTime <= token.CreateTime) == false)
+                if (dbContext.SmtTenant.Any(p => p.ID == token.TenantID && p.TokenValidTime <= token.CreateTime) == false)
                 {
                     return false;
                 }
             }
             else
             {
-                if (dbContext.SmtUser.Any(p => p.ID == token.UserId && p.TokenValidTime <= token.CreateTime) == false)
+                if (dbContext.SmtUser.Any(p => p.ID == token.UserID && p.TokenValidTime <= token.CreateTime) == false)
                 {
                     return false;
                 }
@@ -262,11 +266,19 @@ namespace huypq.SmtMiddleware
             return true;
         }
 
-        private bool CheckActionPermission(string controllerName, string actionName, SmtTokenModel token)
+        private bool CheckActionPermission(string controllerName, string actionName, TokenManager.LoginToken token)
         {
             if (token.Claims.ContainsKey("*") == true)
             {
                 return true;
+            }
+
+            if (SmtController == controllerName)
+            {
+                if (SmtControllerActionPermissions.Contains(actionName) == true)
+                {
+                    return true;
+                }
             }
 
             List<string> actions;

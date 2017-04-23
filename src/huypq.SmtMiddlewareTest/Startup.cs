@@ -22,7 +22,7 @@ namespace huypq.SmtMiddlewareTest
         {
             loggerFactory.AddConsole();
 
-            app.UseCors(builder => builder.WithOrigins("http://localhost").AllowAnyHeader().AllowAnyMethod());
+            app.UseCors(builder => builder.WithOrigins("http://localhost", "http://luoithepvinhphat.com").AllowAnyHeader().AllowAnyMethod());
             //SmtSettings.Instance.AllowAnonymousActions.Add("user.get");
             app.UseSmt<TestContext, SmtTenant, SmtUser, SmtUserClaim>("huypq.SmtMiddlewareTest");
         }

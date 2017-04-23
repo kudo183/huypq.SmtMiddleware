@@ -1,0 +1,56 @@
+﻿using Microsoft.AspNetCore.DataProtection;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace huypq.SmtMiddleware
+{
+    public static class MailUtils
+    {
+        public static void SendTenantToken(string email, string purpose)
+        {
+            var token = new TokenManager.Token()
+            {
+                IsTenant = true,
+                Email = email,
+                Purpose = purpose
+            };
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine(string.Format("$user\t{0}", email));
+            sb.AppendLine(string.Format("$purpose\t{0}", purpose));
+            sb.AppendLine(string.Format("$token\t{0}", TokenManager.Token.CreateTokenString(token)));
+            var content = sb.ToString();
+            if (Directory.Exists(SmtSettings.Instance.EmailFolderPath) == false)
+            {
+                Directory.CreateDirectory(SmtSettings.Instance.EmailFolderPath);
+            }
+
+            File.WriteAllText(Path.Combine(SmtSettings.Instance.EmailFolderPath, string.Format("{0}.txt", DateTime.UtcNow.Ticks)), content);
+        }
+
+        public static void SendUserToken(string email, string tenantName, string purpose)
+        {
+            var token = new TokenManager.Token()
+            {
+                IsTenant = false,
+                Email = email,
+                TenantName = tenantName,
+                Purpose = purpose
+            };
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine(string.Format("$user\t{0}", email));
+            sb.AppendLine(string.Format("$tenant\t{0}", tenantName));
+            sb.AppendLine(string.Format("$purpose\t{0}", purpose));
+            sb.AppendLine(string.Format("$token\t{0}", TokenManager.Token.CreateTokenString(token)));
+            var content = sb.ToString();
+            if (Directory.Exists(SmtSettings.Instance.EmailFolderPath) == false)
+            {
+                Directory.CreateDirectory(SmtSettings.Instance.EmailFolderPath);
+            }
+
+            File.WriteAllText(Path.Combine(SmtSettings.Instance.EmailFolderPath, string.Format("{0}.txt", DateTime.UtcNow.Ticks)), content);
+        }
+    }
+}

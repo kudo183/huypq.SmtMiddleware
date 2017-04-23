@@ -2,7 +2,8 @@
 {
     public interface SmtIEntity
     {
-        int ID { get; }
+        int ID { get; set; }
         int TenantID { get; set; }
+        long LastUpdateTime { get; set; }
     }
 }

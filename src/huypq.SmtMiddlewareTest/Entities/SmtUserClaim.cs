@@ -13,6 +13,7 @@ namespace huypq.SmtMiddlewareTest
         public int ID { get; set; }
         public int TenantID { get; set; }
         public int UserID { get; set; }
+        public long LastUpdateTime { get; set; }
 
 
         public SmtTenant TenantIDNavigation { get; set; }

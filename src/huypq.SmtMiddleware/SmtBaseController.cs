@@ -4,18 +4,19 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using huypq.SmtMiddleware.Constant;
 
 namespace huypq.SmtMiddleware
 {
     public abstract class SmtBaseController<ContextType, TenantEntityType, UserEntityType, UserClaimEntityType> : SmtAbstractController, IDisposable
         where TenantEntityType : class, SmtITenant, new()
         where UserEntityType : class, SmtIUser, new()
-            where UserClaimEntityType : class, SmtIUserClaim
-            where ContextType : DbContext, SmtIDbContext<TenantEntityType, UserEntityType, UserClaimEntityType>
+        where UserClaimEntityType : class, SmtIUserClaim
+        where ContextType : DbContext, SmtIDbContext<TenantEntityType, UserEntityType, UserClaimEntityType>
     {
         private ContextType _context;
 
-        public override void Init(SmtTokenModel token, IApplicationBuilder app, HttpContext context, string requestType)
+        public override void Init(TokenManager.LoginToken token, IApplicationBuilder app, HttpContext context, string requestType)
         {
             base.Init(token, app, context, requestType);
             _context = (ContextType)Context.RequestServices.GetService(typeof(ContextType));
@@ -27,29 +28,38 @@ namespace huypq.SmtMiddleware
 
             switch (actionName)
             {
-                case "register":
+                case ActionName.Register:
                     result = Register(parameter["user"].ToString(), parameter["pass"].ToString(), parameter["tenantname"].ToString());
                     break;
-                case "tenantlogin":
+                case ActionName.TenantLogin:
                     result = TenantLogin(parameter["user"].ToString(), parameter["pass"].ToString());
                     break;
-                case "tenantlogout":
-                    result = TenantLogout();
-                    break;
-                case "tenantchangepassword":
-                    result = TenantChangePassword(parameter["currentpass"].ToString(), parameter["newpass"].ToString());
-                    break;
-                case "createuser":
-                    result = CreateUser(parameter["loginname"].ToString(), parameter["displayname"].ToString(), parameter["pass"].ToString());
-                    break;
-                case "userlogin":
+                case ActionName.UserLogin:
                     result = UserLogin(parameter["tenant"].ToString(), parameter["user"].ToString(), parameter["pass"].ToString());
                     break;
-                case "userlogout":
-                    result = UserLogout();
+                case ActionName.ResetUserPassword:
+                    result = ResetUserPassword(parameter["user"].ToString());
                     break;
-                case "userchangepassword":
-                    result = UserChangePassword(parameter["currentpass"].ToString(), parameter["newpass"].ToString());
+                case ActionName.ChangePassword:
+                    result = ChangePassword(parameter["currentpass"].ToString(), parameter["newpass"].ToString());
+                    break;
+                case ActionName.TenantRequestToken:
+                    result = TenantRequestToken(parameter["email"].ToString(), parameter["purpose"].ToString());
+                    break;
+                case ActionName.UserRequestToken:
+                    result = UserRequestToken(parameter["email"].ToString(), parameter["tenantname"].ToString(), parameter["purpose"].ToString());
+                    break;
+                case ActionName.ResetPassword:
+                    result = ResetPassword(parameter["token"].ToString(), parameter["pass"].ToString());
+                    break;
+                case ActionName.ConfirmEmail:
+                    result = ConfirmEmail(parameter["token"].ToString());
+                    break;
+                case ActionName.Logout:
+                    result = Logout();
+                    break;
+                case "ip":
+                    result = CreateObjectResult(GetIPAddress());
                     break;
                 default:
                     break;
@@ -80,18 +90,17 @@ namespace huypq.SmtMiddleware
             switch (validate)
             {
                 case 1:
-                    return CreateObjectResult("Username not available");
+                    return CreateStatusResult(System.Net.HttpStatusCode.BadRequest, "Username not available");
                 case 2:
-                    return CreateObjectResult("Tenant name not available");
+                    return CreateStatusResult(System.Net.HttpStatusCode.BadRequest, "Tenant name not available");
                 case 3:
-                    return CreateObjectResult("Username and Tenant name not available");
+                    return CreateStatusResult(System.Net.HttpStatusCode.BadRequest, "Username and Tenant name not available");
             }
 
-            var hasher = new Crypto.PasswordHash();
             var entity = new TenantEntityType()
             {
                 Email = user,
-                PasswordHash = hasher.HashedBase64String(pass),
+                PasswordHash = Crypto.PasswordHash.HashedBase64String(pass),
                 CreateDate = DateTime.UtcNow,
                 TenantName = tenantName,
                 TokenValidTime = DateTime.UtcNow.Ticks
@@ -100,7 +109,9 @@ namespace huypq.SmtMiddleware
 
             _context.SaveChanges();
 
-            return CreateObjectResult("OK");
+            MailUtils.SendTenantToken(user, TokenPurpose.ConfirmEmail);
+
+            return CreateOKResult();
         }
 
         public SmtActionResult TenantLogin(string user, string pass)
@@ -113,7 +124,17 @@ namespace huypq.SmtMiddleware
             var tenantEntity = _context.SmtTenant.FirstOrDefault(p => p.Email == user);
             if (tenantEntity == null)
             {
-                return CreateStatusResult(System.Net.HttpStatusCode.Unauthorized);
+                return CreateStatusResult(System.Net.HttpStatusCode.NotFound);
+            }
+
+            if (tenantEntity.IsConfirmed == false)
+            {
+                return CreateStatusResult(System.Net.HttpStatusCode.Unauthorized, "NotConfirmed");
+            }
+
+            if (tenantEntity.IsLocked == true)
+            {
+                return CreateStatusResult(System.Net.HttpStatusCode.Unauthorized, "Locked");
             }
 
             var result = Crypto.PasswordHash.VerifyHashedPassword(tenantEntity.PasswordHash, pass);
@@ -122,84 +143,9 @@ namespace huypq.SmtMiddleware
                 return CreateStatusResult(System.Net.HttpStatusCode.Unauthorized);
             }
 
-            var token = new SmtTokenModel() { Name = tenantEntity.Email, TenantId = tenantEntity.ID };
+            var token = new TokenManager.LoginToken() { TenantName = tenantEntity.TenantName, TenantID = tenantEntity.ID };
             token.Claims.Add("*", new List<string>());
-            return CreateObjectResult(token);
-        }
-
-        public SmtActionResult TenantLogout()
-        {
-            var tenantEntity = _context.SmtTenant.FirstOrDefault(p => p.ID == TokenModel.TenantId);
-
-            tenantEntity.TokenValidTime = DateTime.UtcNow.Ticks;
-            _context.Entry(tenantEntity).State = EntityState.Modified;
-
-            _context.SaveChanges();
-
-            return CreateObjectResult("OK");
-        }
-
-        public SmtActionResult TenantChangePassword(string currentPass, string newPass)
-        {
-            if (string.IsNullOrEmpty(currentPass) || string.IsNullOrEmpty(newPass) || TokenModel.UserId != 0)
-            {
-                return CreateStatusResult(System.Net.HttpStatusCode.BadRequest);
-            }
-
-            var tenantEntity = _context.SmtTenant.FirstOrDefault(p => p.ID == TokenModel.TenantId);
-            if (tenantEntity == null)
-            {
-                return CreateStatusResult(System.Net.HttpStatusCode.Unauthorized);
-            }
-
-            var result = Crypto.PasswordHash.VerifyHashedPassword(tenantEntity.PasswordHash, currentPass);
-            if (result == false)
-            {
-                return CreateStatusResult(System.Net.HttpStatusCode.Unauthorized);
-            }
-
-            var hasher = new Crypto.PasswordHash();
-            tenantEntity.PasswordHash = hasher.HashedBase64String(newPass);
-            tenantEntity.TokenValidTime = DateTime.UtcNow.Ticks;
-            _context.Entry(tenantEntity).State = EntityState.Modified;
-
-            _context.SaveChanges();
-            
-            return CreateObjectResult("OK");
-        }
-
-        public SmtActionResult CreateUser(string loginName, string displayName, string pass)
-        {
-            if (string.IsNullOrEmpty(loginName) || string.IsNullOrEmpty(displayName) || string.IsNullOrEmpty(pass))
-            {
-                return CreateStatusResult(System.Net.HttpStatusCode.BadRequest);
-            }
-
-            if (TokenModel.TenantId == 0)
-            {
-                return CreateStatusResult(System.Net.HttpStatusCode.Unauthorized);
-            }
-
-            if (_context.SmtUser.Any(p => p.Email == loginName && p.TenantID == TokenModel.TenantId))
-            {
-                return CreateObjectResult("Username not available");
-            }
-
-            var hasher = new Crypto.PasswordHash();
-            var entity = new UserEntityType()
-            {
-                Email = loginName,
-                PasswordHash = hasher.HashedBase64String(pass),
-                CreateDate = DateTime.UtcNow,
-                TenantID = TokenModel.TenantId,
-                UserName = displayName,
-                TokenValidTime = DateTime.UtcNow.Ticks
-            };
-            _context.SmtUser.Add(entity);
-
-            _context.SaveChanges();
-
-            return CreateObjectResult("OK");
+            return CreateObjectResult(TokenManager.LoginToken.CreateTokenString(token));
         }
 
         public SmtActionResult UserLogin(string tenant, string user, string pass)
@@ -212,13 +158,23 @@ namespace huypq.SmtMiddleware
             var tenantEntity = _context.SmtTenant.FirstOrDefault(p => p.TenantName == tenant);
             if (tenantEntity == null)
             {
-                return CreateStatusResult(System.Net.HttpStatusCode.Unauthorized);
+                return CreateStatusResult(System.Net.HttpStatusCode.NotFound);
+            }
+
+            if (tenantEntity.IsLocked == true)
+            {
+                return CreateStatusResult(System.Net.HttpStatusCode.Unauthorized, "Locked");
             }
 
             var userEntity = _context.SmtUser.FirstOrDefault(p => p.Email == user && p.TenantID == tenantEntity.ID);
             if (userEntity == null)
             {
-                return CreateStatusResult(System.Net.HttpStatusCode.Unauthorized);
+                return CreateStatusResult(System.Net.HttpStatusCode.NotFound);
+            }
+
+            if (userEntity.IsLocked == true)
+            {
+                return CreateStatusResult(System.Net.HttpStatusCode.Unauthorized, "Locked");
             }
 
             var result = Crypto.PasswordHash.VerifyHashedPassword(userEntity.PasswordHash, pass);
@@ -227,7 +183,7 @@ namespace huypq.SmtMiddleware
                 return CreateStatusResult(System.Net.HttpStatusCode.Unauthorized);
             }
 
-            var token = new SmtTokenModel() { Name = userEntity.Email, TenantId = userEntity.TenantID, UserId = userEntity.ID };
+            var token = new TokenManager.LoginToken() { UserName = userEntity.UserName, TenantName = tenantEntity.TenantName, TenantID = userEntity.TenantID, UserID = userEntity.ID };
             foreach (var uc in _context.SmtUserClaim.Where(p => p.UserID == userEntity.ID))
             {
                 var temp = uc.Claim.Split('.');
@@ -242,48 +198,198 @@ namespace huypq.SmtMiddleware
                 actions.Add(actionName);
             }
 
-            return CreateObjectResult(token);
+            return CreateObjectResult(TokenManager.LoginToken.CreateTokenString(token));
         }
 
-        public SmtActionResult UserLogout()
+        public SmtActionResult ResetUserPassword(string user)
         {
-            var userEntity = _context.SmtUser.FirstOrDefault(p => p.ID == TokenModel.UserId);
-
-            userEntity.TokenValidTime = DateTime.UtcNow.Ticks;
-            _context.Entry(userEntity).State = EntityState.Modified;
-
-            _context.SaveChanges();
-
-            return CreateObjectResult("OK");
-        }
-
-        public SmtActionResult UserChangePassword(string currentPass, string newPass)
-        {
-            if (string.IsNullOrEmpty(currentPass) || string.IsNullOrEmpty(newPass) || TokenModel.UserId == 0)
+            if (string.IsNullOrEmpty(user))
             {
                 return CreateStatusResult(System.Net.HttpStatusCode.BadRequest);
             }
 
-            var userEntity = _context.SmtUser.FirstOrDefault(p => p.ID == TokenModel.UserId);
-            if (userEntity == null)
+            if (TokenModel.IsTenant == false)
             {
                 return CreateStatusResult(System.Net.HttpStatusCode.Unauthorized);
             }
 
-            var result = Crypto.PasswordHash.VerifyHashedPassword(userEntity.PasswordHash, currentPass);
+            SmtILogin loginEntity = _context.SmtUser.FirstOrDefault(p => p.Email == user);
+
+            if (loginEntity == null)
+            {
+                return CreateStatusResult(System.Net.HttpStatusCode.BadRequest);
+            }
+
+            loginEntity.PasswordHash = Crypto.PasswordHash.HashedBase64String(SmtSettings.Instance.DefaultUserPassword);
+            loginEntity.TokenValidTime = DateTime.UtcNow.Ticks;
+            _context.Entry(loginEntity).State = EntityState.Modified;
+
+            _context.SaveChanges();
+
+            return CreateOKResult();
+        }
+
+        public SmtActionResult ChangePassword(string currentPass, string newPass)
+        {
+            if (string.IsNullOrEmpty(currentPass) || string.IsNullOrEmpty(newPass))
+            {
+                return CreateStatusResult(System.Net.HttpStatusCode.BadRequest);
+            }
+
+            SmtILogin loginEntity = null;
+            if (TokenModel.IsTenant == true)
+            {
+                loginEntity = _context.SmtTenant.FirstOrDefault(p => p.ID == TokenModel.TenantID);
+            }
+            else
+            {
+                loginEntity = _context.SmtUser.FirstOrDefault(p => p.ID == TokenModel.UserID);
+            }
+            if (loginEntity == null)
+            {
+                return CreateStatusResult(System.Net.HttpStatusCode.Unauthorized);
+            }
+
+            var result = Crypto.PasswordHash.VerifyHashedPassword(loginEntity.PasswordHash, currentPass);
             if (result == false)
             {
                 return CreateStatusResult(System.Net.HttpStatusCode.Unauthorized);
             }
 
-            var hasher = new Crypto.PasswordHash();
-            userEntity.PasswordHash = hasher.HashedBase64String(newPass);
-            userEntity.TokenValidTime = DateTime.UtcNow.Ticks;
-            _context.Entry(userEntity).State = EntityState.Modified;
+            loginEntity.PasswordHash = Crypto.PasswordHash.HashedBase64String(newPass);
+            loginEntity.TokenValidTime = DateTime.UtcNow.Ticks;
+            _context.Entry(loginEntity).State = EntityState.Modified;
 
             _context.SaveChanges();
-                        
-            return CreateObjectResult("OK");
+
+            return CreateOKResult();
+        }
+
+        public SmtActionResult ResetPassword(string tokenString, string newPass)
+        {
+            if (string.IsNullOrEmpty(newPass))
+            {
+                return CreateStatusResult(System.Net.HttpStatusCode.BadRequest);
+            }
+
+            var token = TokenManager.Token.VerifyTokenString(tokenString, TokenPurpose.ResetPassword);
+
+            SmtILogin loginEntity = null;
+            if (token.IsTenant == true)
+            {
+                loginEntity = _context.SmtTenant.FirstOrDefault(p => p.Email == token.Email);
+            }
+            else
+            {
+                var tenantEntity = _context.SmtTenant.FirstOrDefault(p => p.TenantName == token.TenantName);
+                loginEntity = _context.SmtUser.FirstOrDefault(p => p.Email == token.Email && p.TenantID == tenantEntity.ID);
+            }
+            if (loginEntity == null)
+            {
+                return CreateStatusResult(System.Net.HttpStatusCode.Unauthorized);
+            }
+            
+            loginEntity.PasswordHash = Crypto.PasswordHash.HashedBase64String(newPass);
+            loginEntity.TokenValidTime = DateTime.UtcNow.Ticks;
+            _context.Entry(loginEntity).State = EntityState.Modified;
+
+            _context.SaveChanges();
+
+            return CreateOKResult();
+        }
+
+        public SmtActionResult TenantRequestToken(string email, string purpose)
+        {
+            switch (purpose)
+            {
+                case TokenPurpose.ConfirmEmail:
+                case TokenPurpose.ResetPassword:
+                    break;
+                default:
+                    return CreateStatusResult(System.Net.HttpStatusCode.BadRequest);
+            }
+
+            if (_context.SmtTenant.Any(p => p.Email == email) == false)
+            {
+                return CreateStatusResult(System.Net.HttpStatusCode.BadRequest);
+            }
+
+            MailUtils.SendTenantToken(email, purpose);
+
+            return CreateOKResult();
+        }
+
+        public SmtActionResult UserRequestToken(string email, string tenantName, string purpose)
+        {
+            switch (purpose)
+            {
+                case TokenPurpose.ConfirmEmail:
+                case TokenPurpose.ResetPassword:
+                    break;
+                default:
+                    return CreateStatusResult(System.Net.HttpStatusCode.BadRequest);
+            }
+
+            var tenantEntity = _context.SmtTenant.FirstOrDefault(p => p.TenantName == tenantName);
+            if (tenantEntity == null)
+            {
+                return CreateStatusResult(System.Net.HttpStatusCode.BadRequest);
+            }
+
+            if (_context.SmtUser.Any(p => p.Email == email && p.TenantID == tenantEntity.ID) == false)
+            {
+                return CreateStatusResult(System.Net.HttpStatusCode.BadRequest);
+            }
+
+            MailUtils.SendUserToken(email, tenantName, purpose);
+
+            return CreateOKResult();
+        }
+
+        public SmtActionResult ConfirmEmail(string tokenString)
+        {
+            var token = TokenManager.Token.VerifyTokenString(tokenString, TokenPurpose.ConfirmEmail);
+
+            SmtILogin loginEntity = null;
+
+            if (token.IsTenant == true)
+            {
+                loginEntity = _context.SmtTenant.FirstOrDefault(p => p.Email == token.Email);
+            }
+            else
+            {
+                var tenantEntity = _context.SmtTenant.FirstOrDefault(p => p.TenantName == token.TenantName);
+                loginEntity = _context.SmtUser.FirstOrDefault(p => p.Email == token.Email && p.TenantID == tenantEntity.ID);
+            }
+
+            loginEntity.IsConfirmed = true;
+            loginEntity.TokenValidTime = DateTime.UtcNow.Ticks;
+            _context.Entry(loginEntity).State = EntityState.Modified;
+
+            _context.SaveChanges();
+
+            return CreateOKResult();
+        }
+
+        public SmtActionResult Logout()
+        {
+            SmtILogin loginEntity = null;
+
+            if (TokenModel.IsTenant == true)
+            {
+                loginEntity = _context.SmtTenant.FirstOrDefault(p => p.ID == TokenModel.TenantID);
+            }
+            else
+            {
+                loginEntity = _context.SmtUser.FirstOrDefault(p => p.ID == TokenModel.UserID);
+            }
+
+            loginEntity.TokenValidTime = DateTime.UtcNow.Ticks;
+            _context.Entry(loginEntity).State = EntityState.Modified;
+
+            _context.SaveChanges();
+
+            return CreateOKResult();
         }
 
         public void Dispose()

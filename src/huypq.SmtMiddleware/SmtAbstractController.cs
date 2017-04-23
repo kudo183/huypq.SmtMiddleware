@@ -15,7 +15,7 @@ namespace huypq.SmtMiddleware
         /// <summary>
         /// authentication token
         /// </summary>
-        public SmtTokenModel TokenModel { get; set; }
+        public TokenManager.LoginToken TokenModel { get; set; }
 
         /// <summary>
         /// 
@@ -37,14 +37,20 @@ namespace huypq.SmtMiddleware
 
         public abstract string GetControllerName();
 
-        public virtual void Init(SmtTokenModel token, IApplicationBuilder app, HttpContext context, string requestType)
+        public virtual void Init(TokenManager.LoginToken token, IApplicationBuilder app, HttpContext context, string requestType)
         {
             TokenModel = token;
             App = app;
             Context = context;
             RequestObjectType = requestType;
         }
-        
+
+        protected string GetIPAddress()
+        {
+            var address = Context.Features.Get<Microsoft.AspNetCore.Http.Features.IHttpConnectionFeature>()?.RemoteIpAddress;
+            return address.ToString();
+        }
+
         /// <summary>
         /// response body is binary stream
         /// </summary>
@@ -69,11 +75,11 @@ namespace huypq.SmtMiddleware
         /// <param name="statusCode"></param>
         /// <returns></returns>
         protected SmtActionResult CreateStatusResult(
-            System.Net.HttpStatusCode statusCode = System.Net.HttpStatusCode.OK)
+            System.Net.HttpStatusCode statusCode, string msg = null)
         {
             var result = new SmtActionResult();
             result.ResultType = SmtActionResult.ActionResultType.Status;
-            result.ResultValue = null;
+            result.ResultValue = msg;
             result.StatusCode = statusCode;
             return result;
         }
@@ -112,6 +118,15 @@ namespace huypq.SmtMiddleware
             result.ResultValue = resultValue;
             result.StatusCode = System.Net.HttpStatusCode.OK;
             return result;
+        }
+
+        /// <summary>
+        /// CreateObjectResult("OK")
+        /// </summary>
+        /// <returns></returns>
+        protected SmtActionResult CreateOKResult()
+        {
+            return CreateObjectResult("OK");
         }
     }
 }

@@ -7,14 +7,18 @@ namespace huypq.SmtMiddlewareTest
     {
         public static void Main(string[] args)
         {
-            var host = new WebHostBuilder()
+            var hostBuilder = new WebHostBuilder()
                 .UseKestrel()
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .UseIISIntegration()
-                .UseStartup<Startup>()
-                .Build();
+                .UseStartup<Startup>();
 
-            host.Run();
+            if (args.Length > 0)
+            {
+                hostBuilder.UseUrls(args[0]);
+            }
+
+            hostBuilder.Build().Run();
         }
     }
 }
