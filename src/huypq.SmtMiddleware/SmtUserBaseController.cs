@@ -1,4 +1,5 @@
-﻿using huypq.SmtShared;
+﻿using System.Collections.Generic;
+using huypq.SmtShared;
 using Microsoft.EntityFrameworkCore;
 
 namespace huypq.SmtMiddleware
@@ -8,6 +9,16 @@ namespace huypq.SmtMiddleware
         where EntityType : class, SmtIUser, new()
         where DtoType : class, SmtIUserDto, new()
     {
+        public override SmtActionResult ActionInvoker(string actionName, Dictionary<string, object> parameter)
+        {
+            if (TokenModel.IsTenant == false)
+            {
+                return CreateStatusResult(System.Net.HttpStatusCode.Unauthorized);
+            }
+
+            return base.ActionInvoker(actionName, parameter);
+        }
+
         public override DtoType ConvertToDto(EntityType entity)
         {
             var dto = new DtoType()
