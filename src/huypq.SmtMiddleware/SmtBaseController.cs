@@ -187,6 +187,10 @@ namespace huypq.SmtMiddleware
             foreach (var uc in _context.SmtUserClaim.Where(p => p.UserID == userEntity.ID))
             {
                 var temp = uc.Claim.Split('.');
+                if (temp.Length != 2)
+                {
+                    continue;
+                }
                 var controllerName = temp[0];
                 var actionName = temp[1];
                 List<string> actions;
@@ -288,7 +292,7 @@ namespace huypq.SmtMiddleware
             {
                 return CreateStatusResult(System.Net.HttpStatusCode.Unauthorized);
             }
-            
+
             loginEntity.PasswordHash = Crypto.PasswordHash.HashedBase64String(newPass);
             loginEntity.TokenValidTime = DateTime.UtcNow.Ticks;
             _context.Entry(loginEntity).State = EntityState.Modified;
