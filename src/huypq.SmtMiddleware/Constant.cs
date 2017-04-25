@@ -7,7 +7,7 @@
         public const string UserLogin = "userlogin";
         public const string TenantRequestToken = "tenantrequesttoken";
         public const string UserRequestToken = "userrequesttoken";
-        public const string ResetUserPassword = "resetuserpassword";
+        public const string LockUser = "lockuser";
         public const string ChangePassword = "changepassword";
         public const string ResetPassword = "resetpassword";
         public const string Logout = "logout";

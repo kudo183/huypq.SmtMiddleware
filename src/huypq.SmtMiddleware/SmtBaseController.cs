@@ -37,8 +37,8 @@ namespace huypq.SmtMiddleware
                 case ActionName.UserLogin:
                     result = UserLogin(parameter["tenant"].ToString(), parameter["user"].ToString(), parameter["pass"].ToString());
                     break;
-                case ActionName.ResetUserPassword:
-                    result = ResetUserPassword(parameter["user"].ToString());
+                case ActionName.LockUser:
+                    result = LockUser(parameter["user"].ToString(), bool.Parse(parameter["islocked"].ToString()));
                     break;
                 case ActionName.ChangePassword:
                     result = ChangePassword(parameter["currentpass"].ToString(), parameter["newpass"].ToString());
@@ -123,7 +123,7 @@ namespace huypq.SmtMiddleware
             {
                 return CreateStatusResult(System.Net.HttpStatusCode.NotFound);
             }
-            
+
             if (tenantEntity.IsLocked == true)
             {
                 return CreateStatusResult(System.Net.HttpStatusCode.Unauthorized, "Locked");
@@ -197,7 +197,7 @@ namespace huypq.SmtMiddleware
             return CreateObjectResult(TokenManager.LoginToken.CreateTokenString(token));
         }
 
-        public SmtActionResult ResetUserPassword(string user)
+        public SmtActionResult LockUser(string user, bool isLocked)
         {
             if (string.IsNullOrEmpty(user))
             {
@@ -216,7 +216,7 @@ namespace huypq.SmtMiddleware
                 return CreateStatusResult(System.Net.HttpStatusCode.BadRequest);
             }
 
-            loginEntity.PasswordHash = string.Empty;
+            loginEntity.IsLocked = isLocked;
             loginEntity.TokenValidTime = DateTime.UtcNow.Ticks;
             _context.Entry(loginEntity).State = EntityState.Modified;
 
@@ -339,7 +339,7 @@ namespace huypq.SmtMiddleware
 
             return CreateOKResult();
         }
-        
+
         public SmtActionResult Logout()
         {
             SmtILogin loginEntity = null;
