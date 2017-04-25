@@ -7,7 +7,6 @@ namespace huypq.SmtMiddleware
     {
         private static readonly SmtSettings _instance = new SmtSettings()
         {
-            DefaultUserPassword = "12345678",
             DefaultPageSize = 50,
             DefaultOrderOption = new QueryBuilder.OrderByExpression.OrderOption() { PropertyPath = "ID", IsAscending = false },
             MaxItemAllowed = 1000,
@@ -22,12 +21,7 @@ namespace huypq.SmtMiddleware
         {
             get { return _instance; }
         }
-
-        /// <summary>
-        /// Default user password
-        /// </summary>
-        public string DefaultUserPassword { get; set; }
-
+        
         /// <summary>
         /// Email folder path
         /// </summary>

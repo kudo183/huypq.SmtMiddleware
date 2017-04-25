@@ -27,7 +27,6 @@ namespace huypq.SmtMiddleware
                 Email = entity.Email,
                 UserName = entity.UserName,
                 ID = entity.ID,
-                IsConfirmed = entity.IsConfirmed,
                 IsLocked = entity.IsLocked,
                 LastUpdateTime = entity.LastUpdateTime,
                 PasswordHash = entity.PasswordHash,
@@ -53,11 +52,11 @@ namespace huypq.SmtMiddleware
             var now = System.DateTime.UtcNow;
             if (dto.State == DtoState.Add)
             {
-                entity.PasswordHash = Crypto.PasswordHash.HashedBase64String(SmtSettings.Instance.DefaultUserPassword);
+                entity.PasswordHash = string.Empty;
                 entity.CreateDate = now;
                 entity.TokenValidTime = now.Ticks;
 
-                MailUtils.SendUserToken(entity.Email, TokenModel.TenantName, Constant.TokenPurpose.ConfirmEmail);
+                MailUtils.SendUserToken(entity.Email, TokenModel.TenantName, Constant.TokenPurpose.ResetPassword);
             }
             return entity;
         }

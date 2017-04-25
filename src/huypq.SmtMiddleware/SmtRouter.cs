@@ -36,7 +36,6 @@ namespace huypq.SmtMiddleware
             ActionName.UserLogin,
             ActionName.TenantRequestToken,
             ActionName.UserRequestToken,
-            ActionName.ConfirmEmail,
             ActionName.ResetPassword
         };
 

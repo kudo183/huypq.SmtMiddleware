@@ -10,13 +10,11 @@
         public const string ResetUserPassword = "resetuserpassword";
         public const string ChangePassword = "changepassword";
         public const string ResetPassword = "resetpassword";
-        public const string ConfirmEmail = "confirmemail";
         public const string Logout = "logout";
     }
 
     public class TokenPurpose
     {
-        public const string ConfirmEmail = "confirmemail";
         public const string ResetPassword = "resetpassword";
     }
 }
