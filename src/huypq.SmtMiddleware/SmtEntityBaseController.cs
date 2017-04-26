@@ -85,17 +85,11 @@ namespace huypq.SmtMiddleware
             {
                 Items = new List<DtoType>()
             };
-
-            var pageSize = GetPageSize();
-
+            
             if (filter != null)
             {
                 if (filter.PageIndex > 0)
                 {
-                    if (filter.PageSize > pageSize)
-                    {
-                        filter.PageSize = pageSize;
-                    }
                     if (filter.OrderOptions.Count == 0)
                     {
                         filter.OrderOptions.Add(SmtSettings.Instance.DefaultOrderOption);
@@ -104,7 +98,6 @@ namespace huypq.SmtMiddleware
                     query, ref filter, out pageCount);
 
                     result.PageIndex = filter.PageIndex;
-                    result.PageSize = filter.PageSize;
                     result.PageCount = pageCount;
                 }
                 else
@@ -227,12 +220,7 @@ namespace huypq.SmtMiddleware
         {
             return SmtSettings.Instance.MaxItemAllowed;
         }
-
-        protected virtual int GetPageSize()
-        {
-            return SmtSettings.Instance.DefaultPageSize;
-        }
-
+        
         protected virtual DataType ConvertRequestBody<DataType>(System.IO.Stream requestBody)
         {
             DataType data = default(DataType);
