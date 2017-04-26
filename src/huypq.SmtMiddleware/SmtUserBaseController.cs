@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using huypq.SmtShared;
+using huypq.SmtShared.Constant;
 using Microsoft.EntityFrameworkCore;
 
 namespace huypq.SmtMiddleware
@@ -56,7 +57,7 @@ namespace huypq.SmtMiddleware
                 entity.CreateDate = now;
                 entity.TokenValidTime = now.Ticks;
 
-                MailUtils.SendUserToken(entity.Email, TokenModel.TenantName, Constant.TokenPurpose.ResetPassword);
+                MailUtils.SendUserToken(entity.Email, TokenModel.TenantName, TokenPurpose.ResetPassword);
             }
             return entity;
         }

@@ -1,11 +1,12 @@
-﻿using huypq.SmtShared;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using QueryBuilder;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using huypq.SmtShared;
+using huypq.SmtShared.Constant;
+using QueryBuilder;
 
 namespace huypq.SmtMiddleware
 {
@@ -51,22 +52,22 @@ namespace huypq.SmtMiddleware
 
             switch (actionName)
             {
-                case "get":
+                case ControllerAction.SmtEntityBase.Get:
                     result = Get(ConvertRequestBody<QueryExpression>(parameter["body"] as System.IO.Stream), GetQuery());
                     break;
-                case "getbyid":
+                case ControllerAction.SmtEntityBase.GetByID:
                     result = GetByID(int.Parse(parameter["id"].ToString()), GetQuery());
                     break;
-                case "save":
+                case ControllerAction.SmtEntityBase.Save:
                     result = Save(ConvertRequestBody<List<DtoType>>(parameter["body"] as System.IO.Stream));
                     break;
-                case "add":
+                case ControllerAction.SmtEntityBase.Add:
                     result = Add(ConvertRequestBody<DtoType>(parameter["body"] as System.IO.Stream));
                     break;
-                case "update":
+                case ControllerAction.SmtEntityBase.Update:
                     result = Update(ConvertRequestBody<DtoType>(parameter["body"] as System.IO.Stream));
                     break;
-                case "delete":
+                case ControllerAction.SmtEntityBase.Delete:
                     result = Delete(ConvertRequestBody<DtoType>(parameter["body"] as System.IO.Stream));
                     break;
                 default:
@@ -237,10 +238,10 @@ namespace huypq.SmtMiddleware
             DataType data = default(DataType);
             switch (RequestObjectType)
             {
-                case "json":
+                case SerializeType.Json:
                     data = SmtSettings.Instance.JsonSerializer.Deserialize<DataType>(requestBody);
                     break;
-                case "protobuf":
+                case SerializeType.Protobuf:
                     data = SmtSettings.Instance.BinarySerializer.Deserialize<DataType>(requestBody);
                     break;
             }

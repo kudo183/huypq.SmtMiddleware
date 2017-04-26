@@ -1,5 +1,4 @@
-﻿using huypq.SmtMiddleware.Constant;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
@@ -9,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using huypq.SmtShared.Constant;
 
 namespace huypq.SmtMiddleware
 {
@@ -27,22 +27,21 @@ namespace huypq.SmtMiddleware
         private IApplicationBuilder _app;
 
         private string _controllerNamespacePattern;
-        private const string SmtController = "smt";
 
         private readonly List<string> SmtControllerAnonymousActions = new List<string>()
         {
-            ActionName.Register,
-            ActionName.TenantLogin,
-            ActionName.UserLogin,
-            ActionName.TenantRequestToken,
-            ActionName.UserRequestToken,
-            ActionName.ResetPassword
+            ControllerAction.Smt.Register,
+            ControllerAction.Smt.TenantLogin,
+            ControllerAction.Smt.UserLogin,
+            ControllerAction.Smt.TenantRequestToken,
+            ControllerAction.Smt.UserRequestToken,
+            ControllerAction.Smt.ResetPassword
         };
 
         private readonly List<string> SmtControllerActionPermissions = new List<string>()
         {
-            ActionName.ChangePassword,
-            ActionName.Logout
+            ControllerAction.Smt.ChangePassword,
+            ControllerAction.Smt.Logout
         };
 
         public SmtRouter(IApplicationBuilder app, string controllerNamespacePattern)
@@ -63,7 +62,7 @@ namespace huypq.SmtMiddleware
 
                 var parameter = GetRequestParameter(context.Request);
 
-                var requestType = "json";
+                var requestType = SerializeType.Json;
                 if (context.Request.Headers["request"].Count == 1)
                 {
                     requestType = context.Request.Headers["request"][0];
@@ -77,7 +76,7 @@ namespace huypq.SmtMiddleware
                     return;
                 }
 
-                var responseType = "json";
+                var responseType = SerializeType.Json;
                 if (context.Request.Headers["response"].Count == 1)
                 {
                     responseType = context.Request.Headers["response"][0];
@@ -128,7 +127,7 @@ namespace huypq.SmtMiddleware
 
             try
             {
-                if (SmtController == controller)
+                if (ControllerAction.Smt.ControllerName == controller)
                 {
                     if (SmtControllerAnonymousActions.Contains(action) == true)//skip check token
                     {
@@ -209,12 +208,12 @@ namespace huypq.SmtMiddleware
                 case SmtActionResult.ActionResultType.Object:
                     switch (responseType)
                     {
-                        case "protobuf":
+                        case SerializeType.Protobuf:
                             response.Headers["Content-Encoding"] = "gzip";
                             response.ContentType = "application/octet-stream";
                             SmtSettings.Instance.BinarySerializer.Serialize(response.Body, result.ResultValue);
                             break;
-                        case "json":
+                        case SerializeType.Json:
                             response.Headers["Content-Encoding"] = "gzip";
                             response.ContentType = "application/json";
                             SmtSettings.Instance.JsonSerializer.Serialize(response.Body, result.ResultValue);
@@ -272,7 +271,7 @@ namespace huypq.SmtMiddleware
                 return true;
             }
 
-            if (SmtController == controllerName)
+            if (ControllerAction.Smt.ControllerName == controllerName)
             {
                 if (SmtControllerActionPermissions.Contains(actionName) == true)
                 {

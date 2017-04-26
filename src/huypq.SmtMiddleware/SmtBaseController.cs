@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using huypq.SmtMiddleware.Constant;
+using huypq.SmtShared.Constant;
 
 namespace huypq.SmtMiddleware
 {
@@ -28,31 +28,31 @@ namespace huypq.SmtMiddleware
 
             switch (actionName)
             {
-                case ActionName.Register:
+                case ControllerAction.Smt.Register:
                     result = Register(parameter["user"].ToString(), parameter["tenantname"].ToString());
                     break;
-                case ActionName.TenantLogin:
+                case ControllerAction.Smt.TenantLogin:
                     result = TenantLogin(parameter["user"].ToString(), parameter["pass"].ToString());
                     break;
-                case ActionName.UserLogin:
+                case ControllerAction.Smt.UserLogin:
                     result = UserLogin(parameter["tenant"].ToString(), parameter["user"].ToString(), parameter["pass"].ToString());
                     break;
-                case ActionName.LockUser:
+                case ControllerAction.Smt.LockUser:
                     result = LockUser(parameter["user"].ToString(), bool.Parse(parameter["islocked"].ToString()));
                     break;
-                case ActionName.ChangePassword:
+                case ControllerAction.Smt.ChangePassword:
                     result = ChangePassword(parameter["currentpass"].ToString(), parameter["newpass"].ToString());
                     break;
-                case ActionName.TenantRequestToken:
+                case ControllerAction.Smt.TenantRequestToken:
                     result = TenantRequestToken(parameter["email"].ToString(), parameter["purpose"].ToString());
                     break;
-                case ActionName.UserRequestToken:
+                case ControllerAction.Smt.UserRequestToken:
                     result = UserRequestToken(parameter["email"].ToString(), parameter["tenantname"].ToString(), parameter["purpose"].ToString());
                     break;
-                case ActionName.ResetPassword:
+                case ControllerAction.Smt.ResetPassword:
                     result = ResetPassword(parameter["token"].ToString(), parameter["pass"].ToString());
                     break;
-                case ActionName.Logout:
+                case ControllerAction.Smt.Logout:
                     result = Logout();
                     break;
                 case "ip":
