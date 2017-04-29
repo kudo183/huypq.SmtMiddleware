@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace huypq.SmtMiddleware
 {
     public abstract class SmtUserBaseController<ContextType, EntityType, DtoType> : SmtEntityBaseController<ContextType, EntityType, DtoType>
-        where ContextType : DbContext
+        where ContextType : DbContext, SmtIDbContext
         where EntityType : class, SmtIUser, new()
         where DtoType : class, SmtIUserDto, new()
     {

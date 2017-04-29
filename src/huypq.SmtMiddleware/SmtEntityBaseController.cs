@@ -7,13 +7,14 @@ using System.Linq;
 using huypq.SmtShared;
 using huypq.SmtShared.Constant;
 using QueryBuilder;
+using huypq.SmtMiddleware.Entities;
 
 namespace huypq.SmtMiddleware
 {
     public abstract class SmtEntityBaseController<ContextType, EntityType, DtoType> : SmtAbstractController, IDisposable
-        where ContextType : DbContext
+        where ContextType : DbContext, SmtIDbContext
         where EntityType : class, SmtIEntity
-        where DtoType : class, SmtIDto
+        where DtoType : class, SmtIDto, new()
     {
         private ContextType _context;
         protected ContextType DBContext
@@ -22,6 +23,11 @@ namespace huypq.SmtMiddleware
             {
                 return _context;
             }
+        }
+
+        protected string GetTableName()
+        {
+            return typeof(EntityType).Name;
         }
 
         protected SmtActionResult SaveChanges(List<DtoType> items, List<EntityType> changedEntities)
@@ -85,7 +91,7 @@ namespace huypq.SmtMiddleware
             {
                 Items = new List<DtoType>()
             };
-            
+
             if (filter != null)
             {
                 if (filter.PageIndex > 0)
@@ -112,8 +118,8 @@ namespace huypq.SmtMiddleware
 
             if (itemCount > maxItem)
             {
-                result.ErrorMsg = "Entity set too large, please use paging";
-                return CreateObjectResult(result);
+                var msg = string.Format("Entity set too large, max item allowed is {0}", maxItem);
+                return CreateStatusResult(System.Net.HttpStatusCode.BadRequest, msg);
             }
 
             result.LastUpdateTime = DateTime.UtcNow.Ticks;
@@ -122,6 +128,73 @@ namespace huypq.SmtMiddleware
                 result.Items.Add(ConvertToDto(entity));
             }
 
+            return CreateObjectResult(result);
+        }
+
+        protected SmtActionResult GetAll(QueryExpression filter, IQueryable<EntityType> includedQuery)
+        {
+            var query = includedQuery;
+            var result = new List<DtoType>();
+
+            if (filter != null)
+            {
+                query = WhereExpression.AddWhereExpression(query, filter.WhereOptions);
+                //query = OrderByExpression.AddOrderByExpression(query, filter.OrderOptions); //must order in client for perfomance
+            }
+
+            foreach (var entity in query)
+            {
+                result.Add(ConvertToDto(entity));
+            }
+
+            return CreateObjectResult(result);
+        }
+
+        protected SmtActionResult GetUpdate(QueryExpression filter, IQueryable<EntityType> includedQuery)
+        {
+            if (filter == null)
+            {
+                var msg = string.Format(string.Format("Need specify {0} where options", nameof(SmtIDto.LastUpdateTime)));
+                return CreateStatusResult(System.Net.HttpStatusCode.BadRequest, msg);
+            }
+
+            var lastUpdateWhereOption = filter.WhereOptions.Find(p => p.PropertyPath == nameof(SmtIDto.LastUpdateTime));
+            if (lastUpdateWhereOption == null)
+            {
+                var msg = string.Format(string.Format("Need specify {0} where options", nameof(SmtIDto.LastUpdateTime)));
+                return CreateStatusResult(System.Net.HttpStatusCode.BadRequest, msg);
+            }
+
+            var query = includedQuery;
+            var tableName = GetTableName();
+            var result = new List<DtoType>();
+            var tableID = DBContext.SmtTable.FirstOrDefault(p => p.TableName == tableName).ID;
+
+            query = WhereExpression.AddWhereExpression(query, filter.WhereOptions);
+            //query = OrderByExpression.AddOrderByExpression(query, filter.OrderOptions); //must order in client for perfomance
+
+            var lastUpdate = (long)lastUpdateWhereOption.GetValue();
+            var deletedItemsQuery = DBContext.SmtDeletedItem.Where(p => p.TenantID == TokenModel.TenantID && p.TableID == tableID && p.CreateTime > lastUpdate);
+
+            var itemCount = query.Count() + deletedItemsQuery.Count();
+            var maxItem = GetMaxItemAllowed();
+
+            if (itemCount > maxItem)
+            {
+                var msg = string.Format("Entity set too large, max item allowed is {0}", maxItem);
+                return CreateStatusResult(System.Net.HttpStatusCode.BadRequest, msg);
+            }
+
+            foreach (var entity in query)
+            {
+                var dto = ConvertToDto(entity);
+                dto.State = (dto.CreateTime == dto.LastUpdateTime) ? DtoState.Add : DtoState.Update;
+                result.Add(dto);
+            }
+            foreach (var item in deletedItemsQuery)
+            {
+                result.Add(new DtoType() { ID = item.DeletedID, State = DtoState.Delete });
+            }
             return CreateObjectResult(result);
         }
 
@@ -134,6 +207,10 @@ namespace huypq.SmtMiddleware
         protected SmtActionResult Save(List<DtoType> items)
         {
             List<EntityType> changedEntities = new List<EntityType>();
+            var tableName = GetTableName();
+            var tableID = DBContext.SmtTable.FirstOrDefault(p => p.TableName == tableName).ID;
+            var now = DateTime.UtcNow.Ticks;
+
             foreach (var dto in items)
             {
                 var entity = ConvertToEntity(dto);
@@ -142,12 +219,15 @@ namespace huypq.SmtMiddleware
                 {
                     case DtoState.Add:
                         entity.TenantID = TokenModel.TenantID;
+                        entity.CreateTime = now;
+                        entity.LastUpdateTime = now;
                         DBContext.Set<EntityType>().Add(entity);
                         changedEntities.Add(entity);
                         break;
                     case DtoState.Update:
                         if (entity.TenantID == TokenModel.TenantID)
                         {
+                            entity.LastUpdateTime = now;
                             UpdateEntity(DBContext, entity);
                             changedEntities.Add(entity);
                         }
@@ -156,6 +236,13 @@ namespace huypq.SmtMiddleware
                         if (entity.TenantID == TokenModel.TenantID)
                         {
                             DBContext.Set<EntityType>().Remove(entity);
+                            DBContext.SmtDeletedItem.Add(new SmtDeletedItem()
+                            {
+                                TenantID = TokenModel.TenantID,
+                                DeletedID = entity.ID,
+                                TableID = tableID,
+                                CreateTime = now
+                            });
                             changedEntities.Add(entity);
                         }
                         break;
@@ -183,6 +270,7 @@ namespace huypq.SmtMiddleware
             dto.State = DtoState.Update;
             var entity = ConvertToEntity(dto);
             entity.LastUpdateTime = DateTime.UtcNow.Ticks;
+
             if (entity.TenantID != TokenModel.TenantID)
             {
                 return CreateStatusResult(System.Net.HttpStatusCode.Unauthorized);
@@ -202,8 +290,15 @@ namespace huypq.SmtMiddleware
                 return CreateStatusResult(System.Net.HttpStatusCode.Unauthorized);
             }
 
+            var tableName = GetTableName();
             DBContext.Set<EntityType>().Remove(entity);
-
+            DBContext.SmtDeletedItem.Add(new SmtDeletedItem()
+            {
+                TenantID = TokenModel.TenantID,
+                DeletedID = entity.ID,
+                TableID = DBContext.SmtTable.FirstOrDefault(p => p.TableName == tableName).ID,
+                CreateTime = DateTime.UtcNow.Ticks
+            });
             return SaveChanges(new List<DtoType>() { dto }, new List<EntityType>() { entity });
         }
         #endregion
@@ -220,7 +315,7 @@ namespace huypq.SmtMiddleware
         {
             return SmtSettings.Instance.MaxItemAllowed;
         }
-        
+
         protected virtual DataType ConvertRequestBody<DataType>(System.IO.Stream requestBody)
         {
             DataType data = default(DataType);

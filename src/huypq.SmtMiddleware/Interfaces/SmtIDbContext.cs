@@ -1,8 +1,15 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using huypq.SmtMiddleware.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace huypq.SmtMiddleware
 {
-    public interface SmtIDbContext<T>
+    public interface SmtIDbContext
+    {
+        DbSet<SmtDeletedItem> SmtDeletedItem { get; set; }
+        DbSet<SmtTable> SmtTable { get; set; }
+    }
+
+    public interface SmtIDbContext<T> : SmtIDbContext
         where T : class, SmtITenant
     {
         DbSet<T> SmtTenant { get; set; }
