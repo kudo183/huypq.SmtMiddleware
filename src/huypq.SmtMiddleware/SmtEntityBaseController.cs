@@ -125,7 +125,10 @@ namespace huypq.SmtMiddleware
             result.LastUpdateTime = DateTime.UtcNow.Ticks;
             foreach (var entity in query)
             {
-                result.Items.Add(ConvertToDto(entity));
+                if (entity.LastUpdateTime <= result.LastUpdateTime)
+                {
+                    result.Items.Add(ConvertToDto(entity));
+                }
             }
 
             return CreateObjectResult(result);
@@ -134,7 +137,10 @@ namespace huypq.SmtMiddleware
         protected SmtActionResult GetAll(QueryExpression filter, IQueryable<EntityType> includedQuery)
         {
             var query = includedQuery;
-            var result = new List<DtoType>();
+            var result = new PagingResultDto<DtoType>
+            {
+                Items = new List<DtoType>()
+            };
 
             if (filter != null)
             {
@@ -142,9 +148,13 @@ namespace huypq.SmtMiddleware
                 //query = OrderByExpression.AddOrderByExpression(query, filter.OrderOptions); //must order in client for perfomance
             }
 
+            result.LastUpdateTime = DateTime.UtcNow.Ticks;
             foreach (var entity in query)
             {
-                result.Add(ConvertToDto(entity));
+                if (entity.LastUpdateTime <= result.LastUpdateTime)
+                {
+                    result.Items.Add(ConvertToDto(entity));
+                }
             }
 
             return CreateObjectResult(result);
@@ -167,7 +177,10 @@ namespace huypq.SmtMiddleware
 
             var query = includedQuery;
             var tableName = GetTableName();
-            var result = new List<DtoType>();
+            var result = new PagingResultDto<DtoType>
+            {
+                Items = new List<DtoType>()
+            };
             var tableID = DBContext.SmtTable.FirstOrDefault(p => p.TableName == tableName).ID;
 
             query = WhereExpression.AddWhereExpression(query, filter.WhereOptions);
@@ -185,15 +198,22 @@ namespace huypq.SmtMiddleware
                 return CreateStatusResult(System.Net.HttpStatusCode.BadRequest, msg);
             }
 
+            result.LastUpdateTime = DateTime.UtcNow.Ticks;
             foreach (var entity in query)
             {
-                var dto = ConvertToDto(entity);
-                dto.State = (dto.CreateTime == dto.LastUpdateTime) ? DtoState.Add : DtoState.Update;
-                result.Add(dto);
+                if (entity.LastUpdateTime <= result.LastUpdateTime)
+                {
+                    var dto = ConvertToDto(entity);
+                    dto.State = (dto.CreateTime > lastUpdate) ? DtoState.Add : DtoState.Update;
+                    result.Items.Add(dto);
+                }
             }
             foreach (var item in deletedItemsQuery)
             {
-                result.Add(new DtoType() { ID = item.DeletedID, State = DtoState.Delete });
+                if (item.CreateTime <= result.LastUpdateTime)
+                {
+                    result.Items.Add(new DtoType() { ID = item.DeletedID, State = DtoState.Delete, CreateTime = item.CreateTime });
+                }
             }
             return CreateObjectResult(result);
         }
@@ -214,7 +234,7 @@ namespace huypq.SmtMiddleware
             foreach (var dto in items)
             {
                 var entity = ConvertToEntity(dto);
-                entity.LastUpdateTime = DateTime.UtcNow.Ticks;
+                
                 switch (dto.State)
                 {
                     case DtoState.Add:
