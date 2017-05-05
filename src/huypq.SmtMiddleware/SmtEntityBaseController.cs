@@ -14,7 +14,7 @@ namespace huypq.SmtMiddleware
     public abstract class SmtEntityBaseController<ContextType, EntityType, DtoType> : SmtAbstractController, IDisposable
         where ContextType : DbContext, SmtIDbContext
         where EntityType : class, SmtIEntity
-        where DtoType : class, SmtIDto, new()
+        where DtoType : class, IDto, new()
     {
         private ContextType _context;
         protected ContextType DBContext
@@ -164,14 +164,14 @@ namespace huypq.SmtMiddleware
         {
             if (filter == null)
             {
-                var msg = string.Format(string.Format("Need specify {0} where options", nameof(SmtIDto.LastUpdateTime)));
+                var msg = string.Format(string.Format("Need specify {0} where options", nameof(IDto.LastUpdateTime)));
                 return CreateStatusResult(System.Net.HttpStatusCode.BadRequest, msg);
             }
 
-            var lastUpdateWhereOption = filter.WhereOptions.Find(p => p.PropertyPath == nameof(SmtIDto.LastUpdateTime));
+            var lastUpdateWhereOption = filter.WhereOptions.Find(p => p.PropertyPath == nameof(IDto.LastUpdateTime));
             if (lastUpdateWhereOption == null)
             {
-                var msg = string.Format(string.Format("Need specify {0} where options", nameof(SmtIDto.LastUpdateTime)));
+                var msg = string.Format(string.Format("Need specify {0} where options", nameof(IDto.LastUpdateTime)));
                 return CreateStatusResult(System.Net.HttpStatusCode.BadRequest, msg);
             }
 

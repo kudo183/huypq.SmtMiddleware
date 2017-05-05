@@ -9,7 +9,7 @@ namespace huypq.SmtMiddleware
     public abstract class SmtUserClaimBaseController<ContextType, UserClaimEntityType, UserClaimDtoType, TenantEntityType, UserEntityType> : SmtEntityBaseController<ContextType, UserClaimEntityType, UserClaimDtoType>
         where ContextType : DbContext, SmtIDbContext<TenantEntityType, UserEntityType, UserClaimEntityType>
         where UserClaimEntityType : class, SmtIUserClaim, new()
-        where UserClaimDtoType : class, SmtIUserClaimDto, new()
+        where UserClaimDtoType : class, IUserClaimDto, new()
         where TenantEntityType : class, SmtITenant, new()
         where UserEntityType : class, SmtIUser, new()
     {

@@ -8,7 +8,7 @@ namespace huypq.SmtMiddleware
     public abstract class SmtUserBaseController<ContextType, EntityType, DtoType> : SmtEntityBaseController<ContextType, EntityType, DtoType>
         where ContextType : DbContext, SmtIDbContext
         where EntityType : class, SmtIUser, new()
-        where DtoType : class, SmtIUserDto, new()
+        where DtoType : class, IUserDto, new()
     {
         public override SmtActionResult ActionInvoker(string actionName, Dictionary<string, object> parameter)
         {
