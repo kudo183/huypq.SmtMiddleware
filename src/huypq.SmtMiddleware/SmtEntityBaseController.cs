@@ -12,8 +12,8 @@ using huypq.SmtMiddleware.Entities;
 namespace huypq.SmtMiddleware
 {
     public abstract class SmtEntityBaseController<ContextType, EntityType, DtoType> : SmtAbstractController, IDisposable
-        where ContextType : DbContext, SmtIDbContext
-        where EntityType : class, SmtIEntity
+        where ContextType : DbContext, IDbContext
+        where EntityType : class, IEntity
         where DtoType : class, IDto, new()
     {
         private ContextType _context;

@@ -55,11 +55,11 @@ namespace huypq.SmtMiddleware
         /// <summary>
         /// Use for deserialize request parameter and serialize response if Header["response"]="json"
         /// </summary>
-        public SmtISerializer JsonSerializer { get; set; }
+        public ISerializer JsonSerializer { get; set; }
 
         /// <summary>
         /// Use for serialize response if Header["response"]="protobuf"
         /// </summary>
-        public SmtISerializer BinarySerializer { get; set; }
+        public ISerializer BinarySerializer { get; set; }
     }
 }

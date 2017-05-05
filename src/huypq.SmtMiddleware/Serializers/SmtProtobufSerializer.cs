@@ -3,7 +3,7 @@ using System.IO.Compression;
 
 namespace huypq.SmtMiddleware
 {
-    public class SmtProtobufSerializer : SmtISerializer
+    public class SmtProtobufSerializer : ISerializer
     {
         public T Deserialize<T>(Stream data)
         {

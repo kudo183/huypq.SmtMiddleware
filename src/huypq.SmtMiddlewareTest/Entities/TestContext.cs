@@ -6,7 +6,7 @@ using huypq.SmtMiddleware.Entities;
 
 namespace huypq.SmtMiddlewareTest
 {
-    public partial class TestContext : DbContext, SmtIDbContext<SmtTenant, SmtUser, SmtUserClaim>
+    public partial class TestContext : DbContext, IDbContext<SmtTenant, SmtUser, SmtUserClaim>
     {
         public TestContext(DbContextOptions<TestContext> options) : base(options)
         {

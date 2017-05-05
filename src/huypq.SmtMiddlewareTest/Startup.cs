@@ -13,7 +13,7 @@ namespace huypq.SmtMiddlewareTest
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddCors();
-            //services.AddTransient(typeof(SmtIDbContext<SmtITenant, SmtIUser>), typeof(TestContext));
+            //services.AddTransient(typeof(IDbContext<ITenant, IUser>), typeof(TestContext));
             services.AddSmtWithTrustedConnection<TestContext, SmtTenant, SmtUser, SmtUserClaim>("Test", @"c:\huypq.SmtMiddleware.key");
         }
 

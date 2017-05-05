@@ -1,6 +1,6 @@
 ﻿namespace huypq.SmtMiddleware
 {
-    public interface SmtITenant: SmtILogin
+    public interface ITenant: ILogin
     {
         int ID { get; }
         System.DateTime CreateDate { get; set; }

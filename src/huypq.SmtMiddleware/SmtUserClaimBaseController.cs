@@ -7,11 +7,11 @@ using System.Linq;
 namespace huypq.SmtMiddleware
 {
     public abstract class SmtUserClaimBaseController<ContextType, UserClaimEntityType, UserClaimDtoType, TenantEntityType, UserEntityType> : SmtEntityBaseController<ContextType, UserClaimEntityType, UserClaimDtoType>
-        where ContextType : DbContext, SmtIDbContext<TenantEntityType, UserEntityType, UserClaimEntityType>
-        where UserClaimEntityType : class, SmtIUserClaim, new()
+        where ContextType : DbContext, IDbContext<TenantEntityType, UserEntityType, UserClaimEntityType>
+        where UserClaimEntityType : class, IUserClaim, new()
         where UserClaimDtoType : class, IUserClaimDto, new()
-        where TenantEntityType : class, SmtITenant, new()
-        where UserEntityType : class, SmtIUser, new()
+        where TenantEntityType : class, ITenant, new()
+        where UserEntityType : class, IUser, new()
     {
         public override UserClaimDtoType ConvertToDto(UserClaimEntityType entity)
         {

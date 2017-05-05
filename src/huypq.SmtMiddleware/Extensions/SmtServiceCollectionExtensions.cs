@@ -18,10 +18,10 @@ namespace huypq.SmtMiddleware
         /// <returns></returns>
         public static IServiceCollection AddSmtWithTrustedConnection<ContextType, TenantEntityType, UserEntityType, UserClaimEntityType>(
             this IServiceCollection services, string dbName, string tokenEncryptKeyDirectoryPath)
-            where TenantEntityType : class, SmtITenant
-            where UserEntityType : class, SmtIUser
-            where UserClaimEntityType : class, SmtIUserClaim
-            where ContextType : DbContext, SmtIDbContext<TenantEntityType, UserEntityType, UserClaimEntityType>
+            where TenantEntityType : class, ITenant
+            where UserEntityType : class, IUser
+            where UserClaimEntityType : class, IUserClaim
+            where ContextType : DbContext, IDbContext<TenantEntityType, UserEntityType, UserClaimEntityType>
         {
             var connection = string.Format(@"Server=.;Database={0};Trusted_Connection=True;", dbName);
 
@@ -40,10 +40,10 @@ namespace huypq.SmtMiddleware
         /// <returns></returns>
         public static IServiceCollection AddSmt<ContextType, TenantEntityType, UserEntityType, UserClaimEntityType>(
             this IServiceCollection services, string connection, string tokenEncryptKeyDirectoryPath)
-            where TenantEntityType : class, SmtITenant
-            where UserEntityType : class, SmtIUser
-            where UserClaimEntityType : class, SmtIUserClaim
-            where ContextType : DbContext, SmtIDbContext<TenantEntityType, UserEntityType, UserClaimEntityType>
+            where TenantEntityType : class, ITenant
+            where UserEntityType : class, IUser
+            where UserClaimEntityType : class, IUserClaim
+            where ContextType : DbContext, IDbContext<TenantEntityType, UserEntityType, UserClaimEntityType>
         {
             services.AddDbContext<ContextType>(options => options.UseSqlServer(connection), ServiceLifetime.Scoped);
             services.AddDataProtection()

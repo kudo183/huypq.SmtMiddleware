@@ -1,6 +1,6 @@
 ﻿namespace huypq.SmtMiddleware
 {
-    public interface SmtIEntity
+    public interface IEntity
     {
         int ID { get; set; }
         int TenantID { get; set; }

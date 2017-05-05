@@ -5,7 +5,7 @@ using System.IO.Compression;
 
 namespace huypq.SmtMiddleware
 {
-    public class SmtJsonSerializer : SmtISerializer
+    public class SmtJsonSerializer : ISerializer
     {
         private JsonSerializer _jsonSerializer;
 

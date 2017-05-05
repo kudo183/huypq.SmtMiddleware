@@ -1,6 +1,6 @@
 ﻿namespace huypq.SmtMiddleware
 {
-    public interface SmtIUserClaim: SmtIEntity
+    public interface IUserClaim: IEntity
     {
         int UserID { get; set; }
         string Claim { get; set; }

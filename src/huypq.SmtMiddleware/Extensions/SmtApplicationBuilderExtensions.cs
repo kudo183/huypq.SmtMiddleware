@@ -18,10 +18,10 @@ namespace huypq.SmtMiddleware
         /// <returns></returns>
         public static IApplicationBuilder UseSmt<ContextType, TenantEntityType, UserEntityType, UserClaimEntityType>(
             this IApplicationBuilder app, string applicationNamespace)
-            where TenantEntityType : class, SmtITenant, new()
-            where UserEntityType : class, SmtIUser, new()
-            where UserClaimEntityType : class, SmtIUserClaim
-            where ContextType : DbContext, SmtIDbContext<TenantEntityType, UserEntityType, UserClaimEntityType>
+            where TenantEntityType : class, ITenant, new()
+            where UserEntityType : class, IUser, new()
+            where UserClaimEntityType : class, IUserClaim
+            where ContextType : DbContext, IDbContext<TenantEntityType, UserEntityType, UserClaimEntityType>
         {
             if (app == null)
             {

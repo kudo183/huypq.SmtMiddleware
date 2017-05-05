@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace huypq.SmtMiddlewareTest
 {
-    public partial class SmtTenant : huypq.SmtMiddleware.SmtITenant
+    public partial class SmtTenant : huypq.SmtMiddleware.ITenant
     {
         public SmtTenant()
         {

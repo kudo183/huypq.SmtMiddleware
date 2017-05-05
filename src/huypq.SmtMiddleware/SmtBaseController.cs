@@ -9,10 +9,10 @@ using huypq.SmtShared.Constant;
 namespace huypq.SmtMiddleware
 {
     public abstract class SmtBaseController<ContextType, TenantEntityType, UserEntityType, UserClaimEntityType> : SmtAbstractController, IDisposable
-        where TenantEntityType : class, SmtITenant, new()
-        where UserEntityType : class, SmtIUser, new()
-        where UserClaimEntityType : class, SmtIUserClaim
-        where ContextType : DbContext, SmtIDbContext<TenantEntityType, UserEntityType, UserClaimEntityType>
+        where TenantEntityType : class, ITenant, new()
+        where UserEntityType : class, IUser, new()
+        where UserClaimEntityType : class, IUserClaim
+        where ContextType : DbContext, IDbContext<TenantEntityType, UserEntityType, UserClaimEntityType>
     {
         private ContextType _context;
 
@@ -209,7 +209,7 @@ namespace huypq.SmtMiddleware
                 return CreateStatusResult(System.Net.HttpStatusCode.Unauthorized);
             }
 
-            SmtILogin loginEntity = _context.SmtUser.FirstOrDefault(p => p.Email == user);
+            ILogin loginEntity = _context.SmtUser.FirstOrDefault(p => p.Email == user);
 
             if (loginEntity == null)
             {
@@ -232,7 +232,7 @@ namespace huypq.SmtMiddleware
                 return CreateStatusResult(System.Net.HttpStatusCode.BadRequest);
             }
 
-            SmtILogin loginEntity = null;
+            ILogin loginEntity = null;
             if (TokenModel.IsTenant == true)
             {
                 loginEntity = _context.SmtTenant.FirstOrDefault(p => p.ID == TokenModel.TenantID);
@@ -270,7 +270,7 @@ namespace huypq.SmtMiddleware
 
             var token = TokenManager.Token.VerifyTokenString(tokenString, TokenPurpose.ResetPassword);
 
-            SmtILogin loginEntity = null;
+            ILogin loginEntity = null;
             if (token.IsTenant == true)
             {
                 loginEntity = _context.SmtTenant.FirstOrDefault(p => p.Email == token.Email);
@@ -342,7 +342,7 @@ namespace huypq.SmtMiddleware
 
         public SmtActionResult Logout()
         {
-            SmtILogin loginEntity = null;
+            ILogin loginEntity = null;
 
             if (TokenModel.IsTenant == true)
             {

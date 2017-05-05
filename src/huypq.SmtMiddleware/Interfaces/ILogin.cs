@@ -1,6 +1,6 @@
 ﻿namespace huypq.SmtMiddleware
 {
-    public interface SmtILogin
+    public interface ILogin
     {
         bool IsLocked { get; set; }
         string Email { get; set; }

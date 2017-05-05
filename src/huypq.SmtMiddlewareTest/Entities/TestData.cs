@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using huypq.SmtMiddleware;
 
 namespace huypq.SmtMiddlewareTest
 {
-    public partial class TestData : huypq.SmtMiddleware.SmtIEntity
+    public partial class TestData : IEntity
     {
         public TestData()
         {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace huypq.SmtMiddlewareTest
 {
-    public partial class SmtUserClaim : huypq.SmtMiddleware.SmtIUserClaim
+    public partial class SmtUserClaim : huypq.SmtMiddleware.IUserClaim
     {
         public SmtUserClaim()
         {

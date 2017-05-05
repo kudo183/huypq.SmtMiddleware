@@ -13,10 +13,10 @@ using huypq.SmtShared.Constant;
 namespace huypq.SmtMiddleware
 {
     public class SmtRouter<ContextType, TenantEntityType, UserEntityType, UserClaimEntityType>
-        where TenantEntityType : class, SmtITenant, new()
-        where UserEntityType : class, SmtIUser, new()
-        where UserClaimEntityType : class, SmtIUserClaim
-        where ContextType : DbContext, SmtIDbContext<TenantEntityType, UserEntityType, UserClaimEntityType>
+        where TenantEntityType : class, ITenant, new()
+        where UserEntityType : class, IUser, new()
+        where UserClaimEntityType : class, IUserClaim
+        where ContextType : DbContext, IDbContext<TenantEntityType, UserEntityType, UserClaimEntityType>
     {
         public RouteHandler GetRouteHandler()
         {

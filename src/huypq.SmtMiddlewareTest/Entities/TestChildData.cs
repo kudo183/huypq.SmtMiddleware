@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace huypq.SmtMiddlewareTest
 {
-    public partial class TestChildData : huypq.SmtMiddleware.SmtIEntity
+    public partial class TestChildData : huypq.SmtMiddleware.IEntity
     {
         public TestChildData()
         {
