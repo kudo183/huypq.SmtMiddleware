@@ -1,7 +1,7 @@
 ﻿using huypq.SmtMiddleware;
-using huypq.SmtSharedTest;
+using huypq.SmtShared.Test;
 
-namespace huypq.SmtMiddlewareTest.Controllers
+namespace huypq.SmtMiddleware.Test.Controllers
 {
     public class SmtUserController : SmtUserBaseController<TestContext, SmtUser, SmtUserDto>
     {

@@ -1,10 +1,10 @@
 ﻿using huypq.SmtMiddleware;
 using huypq.SmtShared.Constant;
-using huypq.SmtSharedTest;
+using huypq.SmtShared.Test;
 using QueryBuilder;
 using System.Collections.Generic;
 
-namespace huypq.SmtMiddlewareTest.Controllers
+namespace huypq.SmtMiddleware.Test.Controllers
 {
     public class TestDataController : SmtEntityBaseController<TestContext, TestData, TestDataDto>
     {

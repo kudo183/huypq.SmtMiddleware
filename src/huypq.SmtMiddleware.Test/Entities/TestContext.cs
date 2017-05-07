@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using huypq.SmtMiddleware;
 using huypq.SmtMiddleware.Entities;
 
-namespace huypq.SmtMiddlewareTest
+namespace huypq.SmtMiddleware.Test
 {
     public partial class TestContext : DbContext, IDbContext<SmtTenant, SmtUser, SmtUserClaim>
     {

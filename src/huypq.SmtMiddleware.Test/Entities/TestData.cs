@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using huypq.SmtMiddleware;
 
-namespace huypq.SmtMiddlewareTest
+namespace huypq.SmtMiddleware.Test
 {
     public partial class TestData : IEntity
     {

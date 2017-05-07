@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using huypq.SmtMiddleware;
 
-namespace huypq.SmtMiddlewareTest
+namespace huypq.SmtMiddleware.Test
 {
     public class Startup
     {
@@ -24,7 +24,7 @@ namespace huypq.SmtMiddlewareTest
 
             app.UseCors(builder => builder.WithOrigins("http://localhost", "http://luoithepvinhphat.com").AllowAnyHeader().AllowAnyMethod());
             //SmtSettings.Instance.AllowAnonymousActions.Add("user.get");
-            app.UseSmt<TestContext, SmtTenant, SmtUser, SmtUserClaim>("huypq.SmtMiddlewareTest");
+            app.UseSmt<TestContext, SmtTenant, SmtUser, SmtUserClaim>("huypq.SmtMiddleware.Test");
         }
     }
 }

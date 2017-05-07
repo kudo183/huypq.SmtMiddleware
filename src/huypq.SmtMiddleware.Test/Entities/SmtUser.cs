@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace huypq.SmtMiddlewareTest
+namespace huypq.SmtMiddleware.Test
 {
     public partial class SmtUser : huypq.SmtMiddleware.IUser
     {
