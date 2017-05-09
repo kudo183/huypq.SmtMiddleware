@@ -8,7 +8,7 @@ namespace huypq.SmtMiddleware
         private static readonly SmtSettings _instance = new SmtSettings()
         {
             DefaultPageSize = 50,
-            DefaultOrderOption = new QueryBuilder.OrderByExpression.OrderOption() { PropertyPath = "ID", IsAscending = false },
+            DefaultOrderOption = new QueryBuilder.OrderByExpression.OrderOption() { PropertyPath = "ID", IsAscending = true },
             MaxItemAllowed = 1000,
             AllowAnonymousActions = new List<string>(),
             DefaultPermissions = new Dictionary<string, List<string>>(),
