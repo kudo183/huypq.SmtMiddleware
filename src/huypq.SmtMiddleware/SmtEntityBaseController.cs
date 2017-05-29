@@ -64,6 +64,12 @@ namespace huypq.SmtMiddleware
                 case ControllerAction.SmtEntityBase.GetByID:
                     result = GetByID(int.Parse(parameter["id"].ToString()), GetQuery());
                     break;
+                case ControllerAction.SmtEntityBase.GetAll:
+                    result = GetAll(ConvertRequestBody<QueryExpression>(parameter["body"] as System.IO.Stream), GetQuery());
+                    break;
+                case ControllerAction.SmtEntityBase.GetUpdate:
+                    result = GetUpdate(ConvertRequestBody<QueryExpression>(parameter["body"] as System.IO.Stream), GetQuery());
+                    break;
                 case ControllerAction.SmtEntityBase.Save:
                     result = Save(ConvertRequestBody<List<DtoType>>(parameter["body"] as System.IO.Stream));
                     break;
