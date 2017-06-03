@@ -104,7 +104,7 @@ namespace huypq.SmtMiddleware
                 {
                     if (filter.OrderOptions.Count == 0)
                     {
-                        filter.OrderOptions.Add(SmtSettings.Instance.DefaultOrderOption);
+                        filter.OrderOptions.Add(GetDefaultOrderOption());
                     }
                     query = QueryExpression.AddQueryExpression(
                     query, ref filter, out pageCount);
@@ -356,6 +356,11 @@ namespace huypq.SmtMiddleware
             }
 
             return data;
+        }
+
+        protected virtual OrderByExpression.OrderOption GetDefaultOrderOption()
+        {
+            return SmtSettings.Instance.DefaultOrderOption;
         }
 
         protected virtual void UpdateEntity(ContextType context, EntityType entity)
