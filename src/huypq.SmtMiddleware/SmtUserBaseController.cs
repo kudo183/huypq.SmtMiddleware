@@ -14,7 +14,7 @@ namespace huypq.SmtMiddleware
         {
             if (TokenModel.IsTenant == false)
             {
-                return CreateStatusResult(System.Net.HttpStatusCode.Unauthorized);
+                return CreateObjectResult("only Tenant is allowed", System.Net.HttpStatusCode.Unauthorized);
             }
 
             return base.ActionInvoker(actionName, parameter);

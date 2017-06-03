@@ -39,7 +39,7 @@ namespace huypq.SmtMiddleware
             }
             catch (Exception ex)
             {
-                return CreateStatusResult(System.Net.HttpStatusCode.InternalServerError);
+                return CreateObjectResult(ex.Message, System.Net.HttpStatusCode.InternalServerError);
             }
             //need return an json object, if just return status code, jquery will treat as fail.
             return CreateOKResult();
@@ -125,7 +125,7 @@ namespace huypq.SmtMiddleware
             if (itemCount > maxItem)
             {
                 var msg = string.Format("Entity set too large, max item allowed is {0}", maxItem);
-                return CreateStatusResult(System.Net.HttpStatusCode.BadRequest, msg);
+                return CreateObjectResult(msg, System.Net.HttpStatusCode.BadRequest);
             }
 
             result.LastUpdateTime = DateTime.UtcNow.Ticks;
@@ -171,14 +171,14 @@ namespace huypq.SmtMiddleware
             if (filter == null)
             {
                 var msg = string.Format(string.Format("Need specify {0} where options", nameof(IDto.LastUpdateTime)));
-                return CreateStatusResult(System.Net.HttpStatusCode.BadRequest, msg);
+                return CreateObjectResult(msg, System.Net.HttpStatusCode.BadRequest);
             }
 
             var lastUpdateWhereOption = filter.WhereOptions.Find(p => p.PropertyPath == nameof(IDto.LastUpdateTime));
             if (lastUpdateWhereOption == null)
             {
                 var msg = string.Format(string.Format("Need specify {0} where options", nameof(IDto.LastUpdateTime)));
-                return CreateStatusResult(System.Net.HttpStatusCode.BadRequest, msg);
+                return CreateObjectResult(msg, System.Net.HttpStatusCode.BadRequest);
             }
 
             var query = includedQuery;
@@ -201,7 +201,7 @@ namespace huypq.SmtMiddleware
             if (itemCount > maxItem)
             {
                 var msg = string.Format("Entity set too large, max item allowed is {0}", maxItem);
-                return CreateStatusResult(System.Net.HttpStatusCode.BadRequest, msg);
+                return CreateObjectResult(msg, System.Net.HttpStatusCode.BadRequest);
             }
 
             result.LastUpdateTime = DateTime.UtcNow.Ticks;
@@ -240,7 +240,7 @@ namespace huypq.SmtMiddleware
             foreach (var dto in items)
             {
                 var entity = ConvertToEntity(dto);
-                
+
                 switch (dto.State)
                 {
                     case DtoState.Add:
@@ -273,7 +273,7 @@ namespace huypq.SmtMiddleware
                         }
                         break;
                     default:
-                        return CreateStatusResult(System.Net.HttpStatusCode.InternalServerError);
+                        return CreateObjectResult("invalid dto State", System.Net.HttpStatusCode.BadRequest);
                 }
             }
 
@@ -299,7 +299,7 @@ namespace huypq.SmtMiddleware
 
             if (entity.TenantID != TokenModel.TenantID)
             {
-                return CreateStatusResult(System.Net.HttpStatusCode.Unauthorized);
+                return CreateObjectResult("wrong Tenant", System.Net.HttpStatusCode.Unauthorized);
             }
 
             UpdateEntity(DBContext, entity);
@@ -313,7 +313,7 @@ namespace huypq.SmtMiddleware
             var entity = ConvertToEntity(dto);
             if (entity.TenantID != TokenModel.TenantID)
             {
-                return CreateStatusResult(System.Net.HttpStatusCode.Unauthorized);
+                return CreateObjectResult("wrong Tenant", System.Net.HttpStatusCode.Unauthorized);
             }
 
             var tableName = GetTableName();

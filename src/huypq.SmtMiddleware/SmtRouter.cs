@@ -161,7 +161,9 @@ namespace huypq.SmtMiddleware
             {
                 result = new SmtActionResult
                 {
-                    StatusCode = System.Net.HttpStatusCode.BadRequest
+                    StatusCode = System.Net.HttpStatusCode.BadRequest,
+                    ResultType = SmtActionResult.ActionResultType.Object,
+                    ResultValue = ex.Message
                 };
             }
             return result;
@@ -206,22 +208,27 @@ namespace huypq.SmtMiddleware
             switch (result.ResultType)
             {
                 case SmtActionResult.ActionResultType.Object:
-                    switch (responseType)
+                    if (result.StatusCode == System.Net.HttpStatusCode.OK)
                     {
-                        case SerializeType.Protobuf:
-                            response.Headers["Content-Encoding"] = "gzip";
-                            response.ContentType = "application/octet-stream";
-                            SmtSettings.Instance.BinarySerializer.Serialize(response.Body, result.ResultValue);
-                            break;
-                        case SerializeType.Json:
-                            response.Headers["Content-Encoding"] = "gzip";
-                            response.ContentType = "application/json";
-                            SmtSettings.Instance.JsonSerializer.Serialize(response.Body, result.ResultValue);
-                            break;
+                        switch (responseType)
+                        {
+                            case SerializeType.Protobuf:
+                                response.Headers["Content-Encoding"] = "gzip";
+                                response.ContentType = "application/octet-stream";
+                                SmtSettings.Instance.BinarySerializer.Serialize(response.Body, result.ResultValue);
+                                break;
+                            case SerializeType.Json:
+                                response.Headers["Content-Encoding"] = "gzip";
+                                response.ContentType = "application/json";
+                                SmtSettings.Instance.JsonSerializer.Serialize(response.Body, result.ResultValue);
+                                break;
+                        }
                     }
-                    break;
-                case SmtActionResult.ActionResultType.Status:
-                    response.ContentLength = 0;
+                    else
+                    {
+                        var r = System.Text.Encoding.ASCII.GetBytes(result.ResultValue as string);
+                        await response.Body.WriteAsync(r, 0, r.Length);
+                    }
                     break;
                 case SmtActionResult.ActionResultType.Stream:
                     using (var stream = result.ResultValue as Stream)

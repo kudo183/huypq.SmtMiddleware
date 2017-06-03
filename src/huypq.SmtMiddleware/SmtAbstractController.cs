@@ -70,21 +70,6 @@ namespace huypq.SmtMiddleware
         }
 
         /// <summary>
-        /// response body is empty
-        /// </summary>
-        /// <param name="statusCode"></param>
-        /// <returns></returns>
-        protected SmtActionResult CreateStatusResult(
-            System.Net.HttpStatusCode statusCode, string msg = null)
-        {
-            var result = new SmtActionResult();
-            result.ResultType = SmtActionResult.ActionResultType.Status;
-            result.ResultValue = msg;
-            result.StatusCode = statusCode;
-            return result;
-        }
-
-        /// <summary>
         /// response body is binary stream
         /// </summary>
         /// <param name="resultValue"></param>
@@ -111,12 +96,12 @@ namespace huypq.SmtMiddleware
         /// <param name="resultValue"></param>
         /// <returns></returns>
         protected SmtActionResult CreateObjectResult(
-            object resultValue)
+            object resultValue, System.Net.HttpStatusCode status = System.Net.HttpStatusCode.OK)
         {
             var result = new SmtActionResult();
             result.ResultType = SmtActionResult.ActionResultType.Object;
             result.ResultValue = resultValue;
-            result.StatusCode = System.Net.HttpStatusCode.OK;
+            result.StatusCode = status;
             return result;
         }
 

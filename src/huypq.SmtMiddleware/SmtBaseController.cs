@@ -69,7 +69,7 @@ namespace huypq.SmtMiddleware
         {
             if (string.IsNullOrEmpty(user) || string.IsNullOrEmpty(tenantName))
             {
-                return CreateStatusResult(System.Net.HttpStatusCode.BadRequest);
+                return CreateObjectResult("user/tenantName cannot empty", System.Net.HttpStatusCode.BadRequest);
             }
 
             var validate = 0;
@@ -87,11 +87,11 @@ namespace huypq.SmtMiddleware
             switch (validate)
             {
                 case 1:
-                    return CreateStatusResult(System.Net.HttpStatusCode.BadRequest, "Username not available");
+                    return CreateObjectResult("Username not available", System.Net.HttpStatusCode.BadRequest);
                 case 2:
-                    return CreateStatusResult(System.Net.HttpStatusCode.BadRequest, "Tenant name not available");
+                    return CreateObjectResult("Tenant name not available", System.Net.HttpStatusCode.BadRequest);
                 case 3:
-                    return CreateStatusResult(System.Net.HttpStatusCode.BadRequest, "Username and Tenant name not available");
+                    return CreateObjectResult("Username and Tenant name not available", System.Net.HttpStatusCode.BadRequest);
             }
 
             var entity = new TenantEntityType()
@@ -115,24 +115,24 @@ namespace huypq.SmtMiddleware
         {
             if (string.IsNullOrEmpty(user) || string.IsNullOrEmpty(pass))
             {
-                return CreateStatusResult(System.Net.HttpStatusCode.BadRequest);
+                return CreateObjectResult("user/pass cannot empty", System.Net.HttpStatusCode.BadRequest);
             }
 
             var tenantEntity = _context.SmtTenant.FirstOrDefault(p => p.Email == user);
             if (tenantEntity == null)
             {
-                return CreateStatusResult(System.Net.HttpStatusCode.NotFound);
+                return CreateObjectResult(null, System.Net.HttpStatusCode.NotFound);
             }
 
             if (tenantEntity.IsLocked == true)
             {
-                return CreateStatusResult(System.Net.HttpStatusCode.Unauthorized, "Locked");
+                return CreateObjectResult("User is locked", System.Net.HttpStatusCode.Unauthorized);
             }
 
             var result = Crypto.PasswordHash.VerifyHashedPassword(tenantEntity.PasswordHash, pass);
             if (result == false)
             {
-                return CreateStatusResult(System.Net.HttpStatusCode.Unauthorized);
+                return CreateObjectResult("wrong password", System.Net.HttpStatusCode.Unauthorized);
             }
 
             var token = new TokenManager.LoginToken() { TenantName = tenantEntity.TenantName, TenantID = tenantEntity.ID };
@@ -144,35 +144,35 @@ namespace huypq.SmtMiddleware
         {
             if (string.IsNullOrEmpty(tenant) || string.IsNullOrEmpty(user) || string.IsNullOrEmpty(pass))
             {
-                return CreateStatusResult(System.Net.HttpStatusCode.Unauthorized);
+                return CreateObjectResult("user/tenantName/pass cannot empty", System.Net.HttpStatusCode.BadRequest);
             }
 
             var tenantEntity = _context.SmtTenant.FirstOrDefault(p => p.TenantName == tenant);
             if (tenantEntity == null)
             {
-                return CreateStatusResult(System.Net.HttpStatusCode.NotFound);
+                return CreateObjectResult("Tenant not found", System.Net.HttpStatusCode.NotFound);
             }
 
             if (tenantEntity.IsLocked == true)
             {
-                return CreateStatusResult(System.Net.HttpStatusCode.Unauthorized, "Locked");
+                return CreateObjectResult("User is locked", System.Net.HttpStatusCode.Unauthorized);
             }
 
             var userEntity = _context.SmtUser.FirstOrDefault(p => p.Email == user && p.TenantID == tenantEntity.ID);
             if (userEntity == null)
             {
-                return CreateStatusResult(System.Net.HttpStatusCode.NotFound);
+                return CreateObjectResult("user not found", System.Net.HttpStatusCode.NotFound);
             }
 
             if (userEntity.IsLocked == true)
             {
-                return CreateStatusResult(System.Net.HttpStatusCode.Unauthorized, "Locked");
+                return CreateObjectResult("User is locked", System.Net.HttpStatusCode.Unauthorized);
             }
 
             var result = Crypto.PasswordHash.VerifyHashedPassword(userEntity.PasswordHash, pass);
             if (result == false)
             {
-                return CreateStatusResult(System.Net.HttpStatusCode.Unauthorized);
+                return CreateObjectResult("wrong pass", System.Net.HttpStatusCode.Unauthorized);
             }
 
             var token = new TokenManager.LoginToken() { UserName = userEntity.UserName, TenantName = tenantEntity.TenantName, TenantID = userEntity.TenantID, UserID = userEntity.ID };
@@ -201,19 +201,19 @@ namespace huypq.SmtMiddleware
         {
             if (string.IsNullOrEmpty(user))
             {
-                return CreateStatusResult(System.Net.HttpStatusCode.BadRequest);
+                return CreateObjectResult("user cannot empty", System.Net.HttpStatusCode.BadRequest);
             }
 
             if (TokenModel.IsTenant == false)
             {
-                return CreateStatusResult(System.Net.HttpStatusCode.Unauthorized);
+                return CreateObjectResult("only Tenant is allowed", System.Net.HttpStatusCode.Unauthorized);
             }
 
             ILogin loginEntity = _context.SmtUser.FirstOrDefault(p => p.Email == user);
 
             if (loginEntity == null)
             {
-                return CreateStatusResult(System.Net.HttpStatusCode.BadRequest);
+                return CreateObjectResult("user not found", System.Net.HttpStatusCode.NotFound);
             }
 
             loginEntity.IsLocked = isLocked;
@@ -229,7 +229,7 @@ namespace huypq.SmtMiddleware
         {
             if (string.IsNullOrEmpty(currentPass) || string.IsNullOrEmpty(newPass))
             {
-                return CreateStatusResult(System.Net.HttpStatusCode.BadRequest);
+                return CreateObjectResult("currentPass/newPass cannot empty", System.Net.HttpStatusCode.BadRequest);
             }
 
             ILogin loginEntity = null;
@@ -243,13 +243,13 @@ namespace huypq.SmtMiddleware
             }
             if (loginEntity == null)
             {
-                return CreateStatusResult(System.Net.HttpStatusCode.Unauthorized);
+                return CreateObjectResult("user not found", System.Net.HttpStatusCode.NotFound);
             }
 
             var result = Crypto.PasswordHash.VerifyHashedPassword(loginEntity.PasswordHash, currentPass);
             if (result == false)
             {
-                return CreateStatusResult(System.Net.HttpStatusCode.Unauthorized);
+                return CreateObjectResult("wrong pass", System.Net.HttpStatusCode.Unauthorized);
             }
 
             loginEntity.PasswordHash = Crypto.PasswordHash.HashedBase64String(newPass);
@@ -265,7 +265,7 @@ namespace huypq.SmtMiddleware
         {
             if (string.IsNullOrEmpty(newPass))
             {
-                return CreateStatusResult(System.Net.HttpStatusCode.BadRequest);
+                return CreateObjectResult("newPass cannot empty", System.Net.HttpStatusCode.BadRequest);
             }
 
             var token = TokenManager.Token.VerifyTokenString(tokenString, TokenPurpose.ResetPassword);
@@ -282,7 +282,7 @@ namespace huypq.SmtMiddleware
             }
             if (loginEntity == null)
             {
-                return CreateStatusResult(System.Net.HttpStatusCode.Unauthorized);
+                return CreateObjectResult("user not found", System.Net.HttpStatusCode.NotFound);
             }
 
             loginEntity.PasswordHash = Crypto.PasswordHash.HashedBase64String(newPass);
@@ -301,12 +301,12 @@ namespace huypq.SmtMiddleware
                 case TokenPurpose.ResetPassword:
                     break;
                 default:
-                    return CreateStatusResult(System.Net.HttpStatusCode.BadRequest);
+                    return CreateObjectResult("wrong token purpose", System.Net.HttpStatusCode.BadRequest);
             }
 
             if (_context.SmtTenant.Any(p => p.Email == email) == false)
             {
-                return CreateStatusResult(System.Net.HttpStatusCode.BadRequest);
+                return CreateObjectResult("email not found", System.Net.HttpStatusCode.NotFound);
             }
 
             MailUtils.SendTenantToken(email, purpose);
@@ -321,18 +321,18 @@ namespace huypq.SmtMiddleware
                 case TokenPurpose.ResetPassword:
                     break;
                 default:
-                    return CreateStatusResult(System.Net.HttpStatusCode.BadRequest);
+                    return CreateObjectResult("wrong token purpose", System.Net.HttpStatusCode.BadRequest);
             }
 
             var tenantEntity = _context.SmtTenant.FirstOrDefault(p => p.TenantName == tenantName);
             if (tenantEntity == null)
             {
-                return CreateStatusResult(System.Net.HttpStatusCode.BadRequest);
+                return CreateObjectResult("tenantName not found", System.Net.HttpStatusCode.NotFound);
             }
 
             if (_context.SmtUser.Any(p => p.Email == email && p.TenantID == tenantEntity.ID) == false)
             {
-                return CreateStatusResult(System.Net.HttpStatusCode.BadRequest);
+                return CreateObjectResult("email not found", System.Net.HttpStatusCode.NotFound);
             }
 
             MailUtils.SendUserToken(email, tenantName, purpose);

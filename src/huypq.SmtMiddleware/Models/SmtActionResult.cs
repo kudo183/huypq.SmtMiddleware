@@ -5,9 +5,8 @@
         public enum ActionResultType
         {
             Stream = 1,
-            Status = 2,
-            File = 3,
-            Object = 4
+            File = 2,
+            Object = 3
         }
 
         /// <summary>
