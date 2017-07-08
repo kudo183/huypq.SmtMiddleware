@@ -39,7 +39,7 @@ namespace huypq.SmtMiddleware
             }
             catch (Exception ex)
             {
-                return CreateObjectResult(ex.Message, System.Net.HttpStatusCode.InternalServerError);
+                return CreateObjectResult(ex.InnerException.Message, System.Net.HttpStatusCode.InternalServerError);
             }
             //need return an json object, if just return status code, jquery will treat as fail.
             return CreateOKResult();

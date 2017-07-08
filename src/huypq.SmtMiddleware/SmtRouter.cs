@@ -86,7 +86,9 @@ namespace huypq.SmtMiddleware
             }
             catch (Exception ex)
             {
+                var r = System.Text.Encoding.ASCII.GetBytes(ex.Message);
                 context.Response.StatusCode = (int)System.Net.HttpStatusCode.InternalServerError;
+                await context.Response.Body.WriteAsync(r, 0, r.Length);
                 return;
             }
         }
@@ -154,7 +156,7 @@ namespace huypq.SmtMiddleware
                 result = new SmtActionResult
                 {
                     StatusCode = System.Net.HttpStatusCode.Unauthorized,
-                    ResultValue = "CryptographicException"
+                    ResultValue = ex.Message
                 };
             }
             catch (Exception ex)
