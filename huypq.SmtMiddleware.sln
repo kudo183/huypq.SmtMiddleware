@@ -1,26 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.26430.15
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{5317D896-FB3B-47F2-964D-823F1E7D2624}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "huypq.SmtMiddleware", "huypq.SmtMiddleware\huypq.SmtMiddleware.csproj", "{F781598F-5F5D-4C1C-871A-B8592E425BCB}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{1161B320-C386-466D-810C-99A411DAC7FB}"
-	ProjectSection(SolutionItems) = preProject
-		global.json = global.json
-	EndProjectSection
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "huypq.QueryBuilder", "..\..\github\huypq.QueryBuilder\huypq.QueryBuilder\huypq.QueryBuilder.csproj", "{2DD39996-E71B-4959-83FC-68D537D17447}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "huypq.SmtMiddleware", "src\huypq.SmtMiddleware\huypq.SmtMiddleware.xproj", "{5C9A7913-1EC5-4C76-96E2-C8FB23940FD7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "huypq.SmtShared", "..\..\github\huypq.SmtShared\huypq.SmtShared\huypq.SmtShared.csproj", "{BBBBE5D0-4B18-4F44-B75C-E67199541417}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "huypq.SmtMiddleware.Test", "src\huypq.SmtMiddleware.Test\huypq.SmtMiddleware.Test.xproj", "{DAB9C0A0-6590-425C-8E08-D026069D2C15}"
-EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "huypq.Crypto", "..\huypq.Crypto\src\huypq.Crypto\huypq.Crypto.xproj", "{BCCC97BE-543A-435A-85DC-FA43BACD1D4E}"
-EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "QueryBuilder", "..\QueryBuilder\src\QueryBuilder\QueryBuilder.xproj", "{6FF410A3-05B4-4669-B63B-631236D8038C}"
-EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "huypq.SmtShared", "..\huypq.SmtShared\src\huypq.SmtShared\huypq.SmtShared.xproj", "{B8E06024-635D-4875-BE89-EF14BF924934}"
-EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "huypq.SmtShared.Test", "..\huypq.SmtShared\src\huypq.SmtShared.Test\huypq.SmtShared.Test.xproj", "{17647806-2912-4BD6-8F6A-67F74D18045F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "huypq.Crypto", "..\..\github\huypq.Crypto\huypq.Crypto\huypq.Crypto.csproj", "{2142128E-2ED4-4BD4-8D3E-A5489C30DA9C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -28,36 +17,24 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{5C9A7913-1EC5-4C76-96E2-C8FB23940FD7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5C9A7913-1EC5-4C76-96E2-C8FB23940FD7}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5C9A7913-1EC5-4C76-96E2-C8FB23940FD7}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5C9A7913-1EC5-4C76-96E2-C8FB23940FD7}.Release|Any CPU.Build.0 = Release|Any CPU
-		{DAB9C0A0-6590-425C-8E08-D026069D2C15}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{DAB9C0A0-6590-425C-8E08-D026069D2C15}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{DAB9C0A0-6590-425C-8E08-D026069D2C15}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{DAB9C0A0-6590-425C-8E08-D026069D2C15}.Release|Any CPU.Build.0 = Release|Any CPU
-		{BCCC97BE-543A-435A-85DC-FA43BACD1D4E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BCCC97BE-543A-435A-85DC-FA43BACD1D4E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BCCC97BE-543A-435A-85DC-FA43BACD1D4E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{BCCC97BE-543A-435A-85DC-FA43BACD1D4E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6FF410A3-05B4-4669-B63B-631236D8038C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6FF410A3-05B4-4669-B63B-631236D8038C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6FF410A3-05B4-4669-B63B-631236D8038C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6FF410A3-05B4-4669-B63B-631236D8038C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B8E06024-635D-4875-BE89-EF14BF924934}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B8E06024-635D-4875-BE89-EF14BF924934}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B8E06024-635D-4875-BE89-EF14BF924934}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B8E06024-635D-4875-BE89-EF14BF924934}.Release|Any CPU.Build.0 = Release|Any CPU
-		{17647806-2912-4BD6-8F6A-67F74D18045F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{17647806-2912-4BD6-8F6A-67F74D18045F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{17647806-2912-4BD6-8F6A-67F74D18045F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{17647806-2912-4BD6-8F6A-67F74D18045F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F781598F-5F5D-4C1C-871A-B8592E425BCB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F781598F-5F5D-4C1C-871A-B8592E425BCB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F781598F-5F5D-4C1C-871A-B8592E425BCB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F781598F-5F5D-4C1C-871A-B8592E425BCB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2DD39996-E71B-4959-83FC-68D537D17447}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2DD39996-E71B-4959-83FC-68D537D17447}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2DD39996-E71B-4959-83FC-68D537D17447}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2DD39996-E71B-4959-83FC-68D537D17447}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BBBBE5D0-4B18-4F44-B75C-E67199541417}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BBBBE5D0-4B18-4F44-B75C-E67199541417}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BBBBE5D0-4B18-4F44-B75C-E67199541417}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BBBBE5D0-4B18-4F44-B75C-E67199541417}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2142128E-2ED4-4BD4-8D3E-A5489C30DA9C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2142128E-2ED4-4BD4-8D3E-A5489C30DA9C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2142128E-2ED4-4BD4-8D3E-A5489C30DA9C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2142128E-2ED4-4BD4-8D3E-A5489C30DA9C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{5C9A7913-1EC5-4C76-96E2-C8FB23940FD7} = {5317D896-FB3B-47F2-964D-823F1E7D2624}
-		{DAB9C0A0-6590-425C-8E08-D026069D2C15} = {5317D896-FB3B-47F2-964D-823F1E7D2624}
 	EndGlobalSection
 EndGlobal
