@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace huypq.SmtMiddleware
 {
@@ -7,7 +6,6 @@ namespace huypq.SmtMiddleware
     {
         private static readonly SmtSettings _instance = new SmtSettings()
         {
-            DefaultPageSize = 50,
             DefaultOrderOption = new QueryBuilder.OrderByExpression.OrderOption() { PropertyPath = "ID", IsAscending = true },
             MaxItemAllowed = 1000,
             AllowAnonymousActions = new List<string>(),
@@ -16,21 +14,16 @@ namespace huypq.SmtMiddleware
             BinarySerializer = new SmtProtobufSerializer(),
             EmailFolderPath = @"c:\emails"
         };
-        
+
         public static SmtSettings Instance
         {
             get { return _instance; }
         }
-        
+
         /// <summary>
         /// Email folder path
         /// </summary>
         public string EmailFolderPath { get; set; }
-
-        /// <summary>
-        /// Default page size
-        /// </summary>
-        public int DefaultPageSize { get; set; }
 
         /// <summary>
         /// Default order option

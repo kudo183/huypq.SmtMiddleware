@@ -100,8 +100,14 @@ namespace huypq.SmtMiddleware
 
             if (filter != null)
             {
-                if (filter.PageIndex > 0)
+                var maxItemAllowed = GetMaxItemAllowed();
+                if (filter.PageSize > 0 && filter.PageSize <= maxItemAllowed)
                 {
+                    if (filter.PageIndex <= 0)//forced to use paging
+                    {
+                        filter.PageIndex = 1;
+                    }
+
                     if (filter.OrderOptions.Count == 0)
                     {
                         filter.OrderOptions.Add(GetDefaultOrderOption());
@@ -114,18 +120,9 @@ namespace huypq.SmtMiddleware
                 }
                 else
                 {
-                    query = WhereExpression.AddWhereExpression(query, filter.WhereOptions);
-                    query = OrderByExpression.AddOrderByExpression(query, filter.OrderOptions);
+                    var msg = string.Format("PageSize must greater than zero and lower than {0}", maxItemAllowed + 1);
+                    return CreateObjectResult(msg, System.Net.HttpStatusCode.BadRequest);
                 }
-            }
-
-            var itemCount = query.Count();
-            var maxItem = GetMaxItemAllowed();
-
-            if (itemCount > maxItem)
-            {
-                var msg = string.Format("Entity set too large, max item allowed is {0}", maxItem);
-                return CreateObjectResult(msg, System.Net.HttpStatusCode.BadRequest);
             }
 
             result.LastUpdateTime = DateTime.UtcNow.Ticks;
