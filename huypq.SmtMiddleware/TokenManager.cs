@@ -14,17 +14,25 @@ namespace huypq.SmtMiddleware
             public bool IsTenant { get; set; }
             public string Email { get; set; }
             public string TenantName { get; set; }
+            public DateTime ExpireTime { get; set; }
 
             public Token()
             {
                 Email = TenantName = string.Empty;
             }
 
+            public bool IsExpired()
+            {
+                return ExpireTime < DateTime.UtcNow;
+            }
+
             public static string CreateTokenString(Token token)
             {
                 var protector = GetProtector(token.Purpose);
+                token.ExpireTime = DateTime.UtcNow.AddMinutes(30);
                 return protector.Protect(token.ToBase64());
             }
+
             public static Token VerifyTokenString(string token, string purpose)
             {
                 var protector = GetProtector(purpose);
@@ -38,6 +46,7 @@ namespace huypq.SmtMiddleware
                 using (var ms = new System.IO.MemoryStream())
                 using (var bw = new System.IO.BinaryWriter(ms))
                 {
+                    bw.Write(ExpireTime.Ticks);
                     bw.Write(IsTenant);
                     bw.Write(Email);
                     bw.Write(TenantName);
@@ -53,6 +62,7 @@ namespace huypq.SmtMiddleware
                 using (var ms = new System.IO.MemoryStream(Convert.FromBase64String(str)))
                 using (var br = new System.IO.BinaryReader(ms))
                 {
+                    result.ExpireTime = new DateTime(br.ReadInt64());
                     result.IsTenant = br.ReadBoolean();
                     result.Email = br.ReadString();
                     result.TenantName = br.ReadString();
@@ -123,7 +133,7 @@ namespace huypq.SmtMiddleware
             {
                 using (var ms = new System.IO.MemoryStream())
                 using (var bw = new System.IO.BinaryWriter(ms))
-                {                   
+                {
                     bw.Write(TenantID);
                     bw.Write(TenantName);
                     bw.Write(UserID);

@@ -270,6 +270,11 @@ namespace huypq.SmtMiddleware
 
             var token = TokenManager.Token.VerifyTokenString(tokenString, TokenPurpose.ResetPassword);
 
+            if (token.IsExpired() == true)
+            {
+                return CreateObjectResult("token expired", System.Net.HttpStatusCode.BadRequest);
+            }
+
             ILogin loginEntity = null;
             if (token.IsTenant == true)
             {
