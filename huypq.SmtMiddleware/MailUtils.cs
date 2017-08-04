@@ -18,6 +18,7 @@ namespace huypq.SmtMiddleware
                 Purpose = purpose
             };
             var sb = new System.Text.StringBuilder();
+            sb.AppendLine("tenant");
             sb.AppendLine(string.Format("$user\t{0}", email));
             sb.AppendLine(string.Format("$purpose\t{0}", purpose));
             sb.AppendLine(string.Format("$token\t{0}", TokenManager.Token.CreateTokenString(token)));
@@ -40,6 +41,7 @@ namespace huypq.SmtMiddleware
                 Purpose = purpose
             };
             var sb = new System.Text.StringBuilder();
+            sb.AppendLine("user");
             sb.AppendLine(string.Format("$user\t{0}", email));
             sb.AppendLine(string.Format("$tenant\t{0}", tenantName));
             sb.AppendLine(string.Format("$purpose\t{0}", purpose));
