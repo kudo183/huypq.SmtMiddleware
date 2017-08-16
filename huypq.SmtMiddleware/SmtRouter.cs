@@ -9,6 +9,9 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using huypq.SmtShared.Constant;
+using Microsoft.Extensions.Logging;
+using System.Threading;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace huypq.SmtMiddleware
 {
@@ -25,6 +28,8 @@ namespace huypq.SmtMiddleware
         RouteHandler _router;
 
         private IApplicationBuilder _app;
+        ILogger _logger;
+        AsyncLocal<DateTime> _asyncLocalTime = new AsyncLocal<DateTime>();
 
         private string _controllerNamespacePattern;
 
@@ -54,6 +59,7 @@ namespace huypq.SmtMiddleware
 
         private async Task SmtRouteHandler(HttpContext context)
         {
+            _asyncLocalTime.Value = DateTime.UtcNow;
             try
             {
                 var routeValues = context.GetRouteData().Values;
@@ -91,6 +97,9 @@ namespace huypq.SmtMiddleware
                 await context.Response.Body.WriteAsync(r, 0, r.Length);
                 return;
             }
+            var now = DateTime.UtcNow;
+            EnsureLoggers(context);
+            _logger.LogInformation(1000, "elapsed time: {a}", (now - _asyncLocalTime.Value).TotalMilliseconds);
         }
 
         private Dictionary<string, object> GetRequestParameter(HttpRequest request)
@@ -298,6 +307,15 @@ namespace huypq.SmtMiddleware
             }
 
             return false;
+        }
+
+        private void EnsureLoggers(HttpContext context)
+        {
+            if (_logger == null)
+            {
+                var factory = context.RequestServices.GetRequiredService<ILoggerFactory>();
+                _logger = factory.CreateLogger("SmtRoute");
+            }
         }
     }
 }
