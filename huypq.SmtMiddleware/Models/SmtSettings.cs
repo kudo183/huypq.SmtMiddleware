@@ -6,19 +6,25 @@ namespace huypq.SmtMiddleware
     {
         private static readonly SmtSettings _instance = new SmtSettings()
         {
-            DefaultOrderOption = new QueryBuilder.OrderByExpression.OrderOption() { PropertyPath = "ID", IsAscending = true },
+            DefaultOrderOption = new QueryBuilder.OrderByExpression.OrderOption() { PropertyPath = nameof(IEntity.ID), IsAscending = true },
             MaxItemAllowed = 1000,
             AllowAnonymousActions = new List<string>(),
             DefaultPermissions = new Dictionary<string, List<string>>(),
             JsonSerializer = new SmtJsonSerializer(),
             BinarySerializer = new SmtProtobufSerializer(),
-            EmailFolderPath = @"c:\emails"
+            EmailFolderPath = @"c:\emails",
+            SmtFileDirectoryPath = @"c:\smtfile"
         };
 
         public static SmtSettings Instance
         {
             get { return _instance; }
         }
+
+        /// <summary>
+        /// SmtFile directory path
+        /// </summary>
+        public string SmtFileDirectoryPath { get; set; }
 
         /// <summary>
         /// Email folder path
