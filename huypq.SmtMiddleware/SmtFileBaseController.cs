@@ -46,7 +46,10 @@ namespace huypq.SmtMiddleware
                     result = Add(parameter["file"] as IFormFile);
                     break;
                 case ControllerAction.SmtFileBase.Update:
-                    result = Update(int.Parse(parameter["id"].ToString()), parameter["file"] as IFormFile);
+                    result = Update(int.Parse(parameter["id"].ToString()), parameter["file"] as IFormFile, GetQuery());
+                    break;
+                case ControllerAction.SmtFileBase.Delete:
+                    result = Delete(int.Parse(parameter["id"].ToString()), GetQuery());
                     break;
                 default:
                     break;
@@ -55,21 +58,38 @@ namespace huypq.SmtMiddleware
             return result;
         }
 
-        protected SmtActionResult GetByID(int id, IQueryable<EntityType> query)
+        protected virtual SmtActionResult GetByID(int id, IQueryable<EntityType> query)
         {
             var entity = query.FirstOrDefault(p => p.ID == id);
             var stream = new FileStream(GetFilePath(entity), FileMode.Open);
             return CreateStreamResult(stream, entity.MimeType);
         }
 
-        protected SmtActionResult Download(int id, IQueryable<EntityType> query)
+        protected virtual SmtActionResult Delete(int id, IQueryable<EntityType> query)
+        {
+            var entity = query.FirstOrDefault(p => p.ID == id);
+            if (entity == null)
+            {
+                return CreateObjectResult(string.Format("{0} not found", id), System.Net.HttpStatusCode.NotFound);
+            }
+
+            var filePath = GetFilePath(entity);
+            File.Delete(filePath);
+
+            DBContext.Set<EntityType>().Remove(entity);
+            DBContext.SaveChanges();
+
+            return CreateOKResult();
+        }
+
+        protected virtual SmtActionResult Download(int id, IQueryable<EntityType> query)
         {
             var entity = query.FirstOrDefault(p => p.ID == id);
             var stream = new FileStream(GetFilePath(entity), FileMode.Open);
             return CreateFileResult(stream, entity.FileName);
         }
 
-        protected SmtActionResult Add(IFormFile file)
+        protected virtual SmtActionResult Add(IFormFile file)
         {
             if (file.Length > 0)
             {
@@ -91,13 +111,16 @@ namespace huypq.SmtMiddleware
                     //await file.CopyToAsync(fileStream);
                     file.CopyTo(fileStream);
                 }
+
+                return CreateObjectResult(entity.ID.ToString());
             }
-            return CreateOKResult();
+
+            return CreateObjectResult("file length = 0", System.Net.HttpStatusCode.BadRequest);
         }
 
-        protected SmtActionResult Update(int id, IFormFile file)
+        protected virtual SmtActionResult Update(int id, IFormFile file, IQueryable<EntityType> query)
         {
-            var entity = DBContext.Set<EntityType>().FirstOrDefault(p => p.ID == id && p.TenantID == TokenModel.TenantID);
+            var entity = query.FirstOrDefault(p => p.ID == id);
             if (entity == null)
             {
                 return CreateObjectResult(string.Format("{0} not found", id), System.Net.HttpStatusCode.NotFound);
@@ -111,6 +134,7 @@ namespace huypq.SmtMiddleware
                 entity.FileName = file.FileName;
                 entity.FileSize = file.Length;
                 entity.MimeType = file.ContentType;
+
                 DBContext.Set<EntityType>().Update(entity);
                 DBContext.SaveChanges();
 
@@ -119,19 +143,21 @@ namespace huypq.SmtMiddleware
                     //await file.CopyToAsync(fileStream);
                     file.CopyTo(fileStream);
                 }
+
+                return CreateOKResult();
             }
 
-            return CreateOKResult();
+            return CreateObjectResult("file length = 0", System.Net.HttpStatusCode.BadRequest);
         }
 
-        protected string GetFilePath(EntityType entity)
+        protected virtual string GetFilePath(EntityType entity)
         {
-            return System.IO.Path.Combine(GetDirectory(), entity.TenantID.ToString(), string.Format("{0}{1}", entity.LastUpdateTime, entity.FileName));
-        }
-
-        protected virtual string GetDirectory()
-        {
-            return SmtSettings.Instance.SmtFileDirectoryPath;
+            string dir = System.IO.Path.Combine(SmtSettings.Instance.SmtFileDirectoryPath, entity.TenantID.ToString());
+            if (!Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
+            return System.IO.Path.Combine(dir, string.Format("{0:D9}_{1}", entity.ID, entity.FileName));
         }
 
         protected virtual IQueryable<EntityType> GetQuery()
