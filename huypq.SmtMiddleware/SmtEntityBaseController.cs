@@ -279,13 +279,20 @@ namespace huypq.SmtMiddleware
 
         protected SmtActionResult Add(DtoType dto)
         {
+            var now = DateTime.UtcNow.Ticks;
             dto.State = DtoState.Add;
             var entity = ConvertToEntity(dto);
             entity.TenantID = TokenModel.TenantID;
-            entity.LastUpdateTime = DateTime.UtcNow.Ticks;
+            entity.CreateTime = now;
+            entity.LastUpdateTime = now;
             DBContext.Set<EntityType>().Add(entity);
 
-            return SaveChanges(new List<DtoType>() { dto }, new List<EntityType>() { entity });
+            var result = SaveChanges(new List<DtoType>() { dto }, new List<EntityType>() { entity });
+            if (result.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                return CreateObjectResult(entity.ID);
+            }
+            return result;
         }
 
         protected SmtActionResult Update(DtoType dto)
