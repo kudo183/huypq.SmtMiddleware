@@ -55,7 +55,7 @@ namespace huypq.SmtMiddleware
                 case ControllerAction.Smt.Logout:
                     result = Logout();
                     break;
-                case "ip":
+                case ControllerAction.Smt.IP:
                     result = CreateObjectResult(GetIPAddress());
                     break;
                 default:

@@ -40,7 +40,8 @@ namespace huypq.SmtMiddleware
             ControllerAction.Smt.UserLogin,
             ControllerAction.Smt.TenantRequestToken,
             ControllerAction.Smt.UserRequestToken,
-            ControllerAction.Smt.ResetPassword
+            ControllerAction.Smt.ResetPassword,
+            ControllerAction.Smt.IP
         };
 
         private readonly List<string> SmtControllerActionPermissions = new List<string>()
