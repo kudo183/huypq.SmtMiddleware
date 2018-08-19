@@ -20,7 +20,6 @@ namespace huypq.SmtMiddleware.Entities
         public long LastUpdateTime { get; set; }
         public bool IsConfirmed { get; set; }
         public bool IsLocked { get; set; }
-        public long CreateTime { get; set; }
 
 
 		
