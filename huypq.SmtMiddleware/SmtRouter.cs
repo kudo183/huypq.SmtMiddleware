@@ -83,6 +83,13 @@ namespace huypq.SmtMiddleware
                     return;
                 }
 
+                //status code not allow write content to response body
+                if (result.StatusCode == System.Net.HttpStatusCode.NotModified)
+                {
+                    context.Response.StatusCode = (int)result.StatusCode;
+                    return;
+                }
+
                 var responseType = SerializeType.Json;
                 if (context.Request.Headers["response"].Count == 1)
                 {
@@ -124,6 +131,8 @@ namespace huypq.SmtMiddleware
                     parameter.Add(file.Name, file);
                 }
             }
+
+            parameter.Add("header", request.Headers);
 
             parameter.Add("body", request.Body);
 
@@ -231,7 +240,7 @@ namespace huypq.SmtMiddleware
                                 break;
                             case SerializeType.Json:
                                 response.Headers["Content-Encoding"] = "gzip";
-                                response.ContentType = "application/json";
+                                response.ContentType = "application/json;charset=utf-8";
                                 SmtSettings.Instance.JsonSerializer.Serialize(response.Body, result.ResultValue);
                                 break;
                         }
