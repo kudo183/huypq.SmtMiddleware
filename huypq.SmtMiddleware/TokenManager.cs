@@ -14,11 +14,15 @@ namespace huypq.SmtMiddleware
             public bool IsTenant { get; set; }
             public string Email { get; set; }
             public string TenantName { get; set; }
+            public long CreateTime { get; set; }
             public DateTime ExpireTime { get; set; }
+            public byte[] CustomData { get; set; }
 
             public Token()
             {
+                CreateTime = DateTime.UtcNow.Ticks;
                 Email = TenantName = string.Empty;
+                CustomData = new byte[0];
             }
 
             public bool IsExpired()
@@ -29,16 +33,26 @@ namespace huypq.SmtMiddleware
             public static string CreateTokenString(Token token)
             {
                 var protector = GetProtector(token.Purpose);
-                token.ExpireTime = DateTime.UtcNow.AddMinutes(30);
+                if (token.ExpireTime == null)
+                {
+                    token.ExpireTime = DateTime.UtcNow.AddMinutes(30);
+                }
                 return protector.Protect(token.ToBase64());
             }
 
             public static Token VerifyTokenString(string token, string purpose)
             {
-                var protector = GetProtector(purpose);
-                var base64PlainToken = protector.Unprotect(token);
+                try
+                {
+                    var protector = GetProtector(purpose);
+                    var base64PlainToken = protector.Unprotect(token);
 
-                return FromBase64(base64PlainToken);
+                    return FromBase64(base64PlainToken);
+                }
+                catch (Exception ex)
+                {
+                    return null;
+                }
             }
 
             private string ToBase64()
@@ -46,10 +60,13 @@ namespace huypq.SmtMiddleware
                 using (var ms = new System.IO.MemoryStream())
                 using (var bw = new System.IO.BinaryWriter(ms))
                 {
+                    bw.Write(CreateTime);
                     bw.Write(ExpireTime.Ticks);
                     bw.Write(IsTenant);
                     bw.Write(Email);
                     bw.Write(TenantName);
+                    bw.Write(CustomData.Length);
+                    bw.Write(CustomData);
                     bw.Flush();
                     return Convert.ToBase64String(ms.ToArray());
                 }
@@ -62,10 +79,12 @@ namespace huypq.SmtMiddleware
                 using (var ms = new System.IO.MemoryStream(Convert.FromBase64String(str)))
                 using (var br = new System.IO.BinaryReader(ms))
                 {
+                    result.CreateTime = br.ReadInt64();
                     result.ExpireTime = new DateTime(br.ReadInt64());
                     result.IsTenant = br.ReadBoolean();
                     result.Email = br.ReadString();
                     result.TenantName = br.ReadString();
+                    result.CustomData = br.ReadBytes(br.ReadInt32());
                     return result;
                 }
             }
@@ -123,10 +142,17 @@ namespace huypq.SmtMiddleware
 
             public static LoginToken VerifyTokenString(string token)
             {
-                var protector = GetProtector(Purpose);
-                var base64PlainToken = protector.Unprotect(token);
+                try
+                {
+                    var protector = GetProtector(Purpose);
+                    var base64PlainToken = protector.Unprotect(token);
 
-                return FromBase64(base64PlainToken);
+                    return FromBase64(base64PlainToken);
+                }
+                catch (Exception ex)
+                {
+                    return null;
+                }
             }
 
             private string ToBase64()
@@ -186,6 +212,40 @@ namespace huypq.SmtMiddleware
         private static IDataProtector GetProtector(string purpose)
         {
             return ServiceProvider.GetDataProtector(purpose);
+        }
+
+        public static class ListStringHelper
+        {
+            public static byte[] ToByteArray(List<string> textData)
+            {
+                using (var ms = new System.IO.MemoryStream())
+                using (var bw = new System.IO.BinaryWriter(ms))
+                {
+                    bw.Write(textData.Count);
+                    for (int i = 0; i < textData.Count; i++)
+                    {
+                        bw.Write(textData[i]);
+                    }
+                    bw.Flush();
+                    return ms.ToArray();
+                }
+            }
+
+            public static List<string> FromByteArray(byte[] bytes)
+            {
+                using (var ms = new System.IO.MemoryStream(bytes))
+                using (var br = new System.IO.BinaryReader(ms))
+                {
+                    var count = br.ReadInt32();
+
+                    var result = new List<string>(count);
+                    for (int i = 0; i < count; i++)
+                    {
+                        result.Add(br.ReadString());
+                    }
+                    return result;
+                }
+            }
         }
     }
 }
