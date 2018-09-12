@@ -6,7 +6,8 @@
         {
             Stream = 1,
             File = 2,
-            Object = 3
+            Object = 3,
+            PlainText = 4
         }
 
         /// <summary>

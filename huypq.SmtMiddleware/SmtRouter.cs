@@ -228,6 +228,9 @@ namespace huypq.SmtMiddleware
             response.ContentType = result.ContentType;
             switch (result.ResultType)
             {
+                case SmtActionResult.ActionResultType.PlainText:
+                    await response.WriteAsync(result.ResultValue.ToString());
+                    break;
                 case SmtActionResult.ActionResultType.Object:
                     if (result.StatusCode == System.Net.HttpStatusCode.OK)
                     {

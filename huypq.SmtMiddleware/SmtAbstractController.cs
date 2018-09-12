@@ -113,5 +113,21 @@ namespace huypq.SmtMiddleware
         {
             return CreateObjectResult("OK");
         }
+
+        /// <summary>
+        /// response type text/plain
+        /// </summary>
+        /// <param name="resultValue"></param>
+        /// <returns></returns>
+        protected SmtActionResult CreatePlainTextResult(
+            object resultValue, System.Net.HttpStatusCode status = System.Net.HttpStatusCode.OK)
+        {
+            var result = new SmtActionResult();
+            result.ResultType = SmtActionResult.ActionResultType.PlainText;
+            result.ContentType = "text/plain";
+            result.ResultValue = resultValue;
+            result.StatusCode = status;
+            return result;
+        }
     }
 }
