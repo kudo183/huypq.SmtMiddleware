@@ -17,6 +17,7 @@ namespace huypq.SmtMiddleware
             public long CreateTime { get; set; }
             public DateTime ExpireTime { get; set; }
             public byte[] CustomData { get; set; }
+            public int TenantID { get; set; }
 
             public Token()
             {
@@ -67,6 +68,7 @@ namespace huypq.SmtMiddleware
                     bw.Write(TenantName);
                     bw.Write(CustomData.Length);
                     bw.Write(CustomData);
+                    bw.Write(TenantID);
                     bw.Flush();
                     return Convert.ToBase64String(ms.ToArray());
                 }
@@ -85,6 +87,7 @@ namespace huypq.SmtMiddleware
                     result.Email = br.ReadString();
                     result.TenantName = br.ReadString();
                     result.CustomData = br.ReadBytes(br.ReadInt32());
+                    result.TenantID = br.ReadInt32();
                     return result;
                 }
             }
@@ -233,6 +236,9 @@ namespace huypq.SmtMiddleware
 
             public static List<string> FromByteArray(byte[] bytes)
             {
+                if (bytes.Length == 0)
+                    return new List<string>();
+
                 using (var ms = new System.IO.MemoryStream(bytes))
                 using (var br = new System.IO.BinaryReader(ms))
                 {
