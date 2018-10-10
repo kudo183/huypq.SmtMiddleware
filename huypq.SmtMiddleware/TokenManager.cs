@@ -34,7 +34,7 @@ namespace huypq.SmtMiddleware
             public static string CreateTokenString(Token token)
             {
                 var protector = GetProtector(token.Purpose);
-                if (token.ExpireTime == null)
+                if (token.ExpireTime.Ticks < DateTime.UtcNow.Ticks)
                 {
                     token.ExpireTime = DateTime.UtcNow.AddMinutes(30);
                 }

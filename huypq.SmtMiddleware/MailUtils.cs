@@ -1,9 +1,5 @@
-﻿using Microsoft.AspNetCore.DataProtection;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace huypq.SmtMiddleware
 {
@@ -15,7 +11,8 @@ namespace huypq.SmtMiddleware
             {
                 IsTenant = true,
                 Email = email,
-                Purpose = purpose
+                Purpose = purpose,
+                ExpireTime = DateTime.UtcNow.AddMinutes(60)
             };
             var sb = new System.Text.StringBuilder();
             sb.AppendLine("tenant");
@@ -38,7 +35,8 @@ namespace huypq.SmtMiddleware
                 IsTenant = false,
                 Email = email,
                 TenantName = tenantName,
-                Purpose = purpose
+                Purpose = purpose,
+                ExpireTime = DateTime.UtcNow.AddMinutes(60)
             };
             var sb = new System.Text.StringBuilder();
             sb.AppendLine("user");
