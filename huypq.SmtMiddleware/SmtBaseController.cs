@@ -1,10 +1,11 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using huypq.SmtShared.Constant;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using huypq.SmtShared.Constant;
+using System.Text.RegularExpressions;
 
 namespace huypq.SmtMiddleware
 {
@@ -15,6 +16,7 @@ namespace huypq.SmtMiddleware
         where ContextType : DbContext, IDbContext<TenantEntityType, UserEntityType, UserClaimEntityType>
     {
         private ContextType _context;
+        private Regex _emailValidator = new Regex(@"^[a-zA-Z0-9.]+@[a-zA-Z0-9]+\.[a-zA-Z]+");
 
         public override void Init(TokenManager.LoginToken token, IApplicationBuilder app, HttpContext context, string requestType)
         {
@@ -72,6 +74,11 @@ namespace huypq.SmtMiddleware
                 return CreateObjectResult("user/tenantName cannot empty", System.Net.HttpStatusCode.BadRequest);
             }
 
+            if (_emailValidator.IsMatch(user) == false)
+            {
+                return CreateObjectResult("user is not valid email", System.Net.HttpStatusCode.BadRequest);
+            }
+
             var validate = 0;
 
             if (_context.SmtTenant.Any(p => p.Email == user))
@@ -87,11 +94,11 @@ namespace huypq.SmtMiddleware
             switch (validate)
             {
                 case 1:
-                    return CreateObjectResult("Username not available", System.Net.HttpStatusCode.BadRequest);
+                    return CreateObjectResult("Username not available", System.Net.HttpStatusCode.Conflict);
                 case 2:
-                    return CreateObjectResult("Tenant name not available", System.Net.HttpStatusCode.BadRequest);
+                    return CreateObjectResult("Tenant name not available", System.Net.HttpStatusCode.Conflict);
                 case 3:
-                    return CreateObjectResult("Username and Tenant name not available", System.Net.HttpStatusCode.BadRequest);
+                    return CreateObjectResult("Username and Tenant name not available", System.Net.HttpStatusCode.Conflict);
             }
 
             var entity = new TenantEntityType()
