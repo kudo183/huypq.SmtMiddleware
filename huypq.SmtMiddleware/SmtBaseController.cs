@@ -60,6 +60,9 @@ namespace huypq.SmtMiddleware
                 case ControllerAction.Smt.IP:
                     result = CreateObjectResult(GetIPAddress());
                     break;
+                case ControllerAction.Smt.Ping:
+                    result = CreateObjectResult(null);
+                    break;
                 default:
                     break;
             }
@@ -133,13 +136,13 @@ namespace huypq.SmtMiddleware
 
             if (tenantEntity.IsLocked == true)
             {
-                return CreateObjectResult("User is locked", System.Net.HttpStatusCode.Unauthorized);
+                return CreateObjectResult("User is locked", System.Net.HttpStatusCode.BadRequest);
             }
 
             var result = Crypto.PasswordHash.VerifyHashedPassword(tenantEntity.PasswordHash, pass);
             if (result == false)
             {
-                return CreateObjectResult("wrong password", System.Net.HttpStatusCode.Unauthorized);
+                return CreateObjectResult("wrong password", System.Net.HttpStatusCode.BadRequest);
             }
 
             var token = new TokenManager.LoginToken() { TenantName = tenantEntity.TenantName, TenantID = tenantEntity.ID };
@@ -162,7 +165,7 @@ namespace huypq.SmtMiddleware
 
             if (tenantEntity.IsLocked == true)
             {
-                return CreateObjectResult("User is locked", System.Net.HttpStatusCode.Unauthorized);
+                return CreateObjectResult("User is locked", System.Net.HttpStatusCode.BadRequest);
             }
 
             var userEntity = _context.SmtUser.FirstOrDefault(p => p.Email == user && p.TenantID == tenantEntity.ID);
@@ -173,13 +176,13 @@ namespace huypq.SmtMiddleware
 
             if (userEntity.IsLocked == true)
             {
-                return CreateObjectResult("User is locked", System.Net.HttpStatusCode.Unauthorized);
+                return CreateObjectResult("User is locked", System.Net.HttpStatusCode.BadRequest);
             }
 
             var result = Crypto.PasswordHash.VerifyHashedPassword(userEntity.PasswordHash, pass);
             if (result == false)
             {
-                return CreateObjectResult("wrong pass", System.Net.HttpStatusCode.Unauthorized);
+                return CreateObjectResult("wrong pass", System.Net.HttpStatusCode.BadRequest);
             }
 
             var token = new TokenManager.LoginToken() { UserName = userEntity.UserName, TenantName = tenantEntity.TenantName, TenantID = userEntity.TenantID, UserID = userEntity.ID };
@@ -213,7 +216,7 @@ namespace huypq.SmtMiddleware
 
             if (TokenModel.IsTenant == false)
             {
-                return CreateObjectResult("only Tenant is allowed", System.Net.HttpStatusCode.Unauthorized);
+                return CreateObjectResult("only Tenant is allowed", System.Net.HttpStatusCode.BadRequest);
             }
 
             ILogin loginEntity = _context.SmtUser.FirstOrDefault(p => p.Email == user);
@@ -256,7 +259,7 @@ namespace huypq.SmtMiddleware
             var result = Crypto.PasswordHash.VerifyHashedPassword(loginEntity.PasswordHash, currentPass);
             if (result == false)
             {
-                return CreateObjectResult("wrong pass", System.Net.HttpStatusCode.Unauthorized);
+                return CreateObjectResult("wrong pass", System.Net.HttpStatusCode.BadRequest);
             }
 
             loginEntity.PasswordHash = Crypto.PasswordHash.HashedBase64String(newPass);

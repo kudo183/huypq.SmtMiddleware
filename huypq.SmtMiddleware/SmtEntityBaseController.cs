@@ -303,7 +303,7 @@ namespace huypq.SmtMiddleware
 
             if (entity.TenantID != TokenModel.TenantID)
             {
-                return CreateObjectResult("wrong Tenant", System.Net.HttpStatusCode.Unauthorized);
+                return CreateObjectResult("wrong Tenant", System.Net.HttpStatusCode.BadRequest);
             }
 
             UpdateEntity(DBContext, entity);
@@ -317,7 +317,7 @@ namespace huypq.SmtMiddleware
             var entity = ConvertToEntity(dto);
             if (entity.TenantID != TokenModel.TenantID)
             {
-                return CreateObjectResult("wrong Tenant", System.Net.HttpStatusCode.Unauthorized);
+                return CreateObjectResult("wrong Tenant", System.Net.HttpStatusCode.BadRequest);
             }
 
             var tableName = GetTableName();

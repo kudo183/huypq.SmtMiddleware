@@ -41,7 +41,8 @@ namespace huypq.SmtMiddleware
             ControllerAction.Smt.TenantRequestToken,
             ControllerAction.Smt.UserRequestToken,
             ControllerAction.Smt.ResetPassword,
-            ControllerAction.Smt.IP
+            ControllerAction.Smt.IP,
+            ControllerAction.Smt.Ping
         };
 
         private readonly List<string> SmtControllerActionPermissions = new List<string>()
@@ -76,19 +77,6 @@ namespace huypq.SmtMiddleware
                 }
 
                 var result = RequestExecutor(controller, action, parameter, context, requestType);
-
-                if (result.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-                {
-                    context.Response.StatusCode = (int)result.StatusCode;
-                    return;
-                }
-
-                //status code not allow write content to response body
-                if (result.StatusCode == System.Net.HttpStatusCode.NotModified)
-                {
-                    context.Response.StatusCode = (int)result.StatusCode;
-                    return;
-                }
 
                 var responseType = SerializeType.Json;
                 if (context.Request.Headers["response"].Count == 1)
@@ -148,26 +136,27 @@ namespace huypq.SmtMiddleware
 
             try
             {
-                if (ControllerAction.Smt.ControllerName == controller)
+                if (ControllerAction.Smt.ControllerName == controller
+                    && SmtControllerAnonymousActions.Contains(action) == true)
                 {
-                    if (SmtControllerAnonymousActions.Contains(action) == true)//skip check token
-                    {
-                        result = ControllerInvoker(controller, action, parameter, null, requestType, context);
-                    }
-                    else
-                    {
-                        var tokenText = request.Headers["token"][0];
-                        result = ControllerInvoker(controller, action, parameter, tokenText, requestType, context);
-                    }
+                    result = ControllerInvoker(controller, action, parameter, requestType, context, null);
                 }
                 else if (SmtSettings.Instance.AllowAnonymousActions.Contains(string.Format("{0}.{1}", controller, action)))
                 {
-                    result = ControllerInvoker(controller, action, parameter, null, requestType, context);
+                    result = ControllerInvoker(controller, action, parameter, requestType, context, null);
                 }
                 else
                 {
                     var tokenText = request.Headers["token"][0];
-                    result = ControllerInvoker(controller, action, parameter, tokenText, requestType, context);
+                    TokenManager.LoginToken token = CheckLogin(tokenText, context, controller, action, out SmtActionResult checkLoginResult);
+                    if (checkLoginResult != null)// check login failed.
+                    {
+                        result = checkLoginResult;
+                    }
+                    else
+                    {
+                        result = ControllerInvoker(controller, action, parameter, requestType, context, token);
+                    }
                 }
             }
             catch (System.Security.Cryptography.CryptographicException ex)
@@ -190,24 +179,45 @@ namespace huypq.SmtMiddleware
             return result;
         }
 
-        private SmtActionResult ControllerInvoker(
-            string controllerName, string actionName, Dictionary<string, object> parameter,
-            string tokenText, string requestType, HttpContext context)
+        private TokenManager.LoginToken CheckLogin(
+            string tokenText, HttpContext context,
+            string controllerName, string actionName, out SmtActionResult result)
         {
+            result = null;
             TokenManager.LoginToken token = null;
-            if (string.IsNullOrEmpty(tokenText) == false)
+
+            token = TokenManager.LoginToken.VerifyTokenString(tokenText);
+            if (token == null)
             {
-                token = TokenManager.LoginToken.VerifyTokenString(tokenText);
-                if (CheckTokenValid(token, context) == false)
+                result = new SmtActionResult
                 {
-                    return new SmtActionResult { StatusCode = System.Net.HttpStatusCode.Unauthorized, ResultValue = "CheckTokenValid" };
-                }
-                if (CheckActionPermission(controllerName, actionName, token) == false)
+                    StatusCode = System.Net.HttpStatusCode.Unauthorized,
+                    ResultValue = "VerifyTokenString"
+                };
+            }
+            else if (CheckTokenValid(token, context) == false)
+            {
+                result = new SmtActionResult
                 {
-                    return new SmtActionResult { StatusCode = System.Net.HttpStatusCode.Unauthorized, ResultValue = "CheckActionPermission" };
-                }
+                    StatusCode = System.Net.HttpStatusCode.Unauthorized,
+                    ResultValue = "CheckTokenValid"
+                };
+            }
+            else if (CheckActionPermission(controllerName, actionName, token) == false)
+            {
+                result = new SmtActionResult
+                {
+                    StatusCode = System.Net.HttpStatusCode.Unauthorized,
+                    ResultValue = "CheckActionPermission"
+                };
             }
 
+            return token;
+        }
+
+        private SmtActionResult ControllerInvoker(
+            string controllerName, string actionName, Dictionary<string, object> parameter, string requestType, HttpContext context, TokenManager.LoginToken token)
+        {
             var controllerType = Type.GetType(
                 string.Format(_controllerNamespacePattern, controllerName), true, true);
 
@@ -218,13 +228,26 @@ namespace huypq.SmtMiddleware
 
         private async Task WriteResponse(HttpResponse response, string responseType, SmtActionResult result)
         {
+            response.StatusCode = (int)result.StatusCode;
+
             if (result.ResultValue == null)
             {
-                response.StatusCode = (int)result.StatusCode;
                 return;
             }
 
-            response.StatusCode = (int)result.StatusCode;
+            //status code not allow write content to response body
+            if (result.StatusCode == System.Net.HttpStatusCode.NotModified)
+            {
+                return;
+            }
+
+            //Unauthorized is only for check login token
+            if (result.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                await response.WriteAsync(result.ResultValue.ToString());
+                return;
+            }
+
             response.ContentType = result.ContentType;
             switch (result.ResultType)
             {
