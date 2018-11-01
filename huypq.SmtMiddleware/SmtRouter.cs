@@ -42,7 +42,9 @@ namespace huypq.SmtMiddleware
             ControllerAction.Smt.UserRequestToken,
             ControllerAction.Smt.ResetPassword,
             ControllerAction.Smt.IP,
-            ControllerAction.Smt.Ping
+            ControllerAction.Smt.Ping,
+            ControllerAction.Smt.TenantLogout,
+            ControllerAction.Smt.UserLogout,
         };
 
         private readonly List<string> SmtControllerActionPermissions = new List<string>()

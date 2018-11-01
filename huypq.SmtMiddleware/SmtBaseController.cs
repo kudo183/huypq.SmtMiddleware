@@ -63,6 +63,12 @@ namespace huypq.SmtMiddleware
                 case ControllerAction.Smt.Ping:
                     result = CreateObjectResult(null);
                     break;
+                case ControllerAction.Smt.TenantLogout:
+                    result = TenantLogout(parameter["user"].ToString(), parameter["pass"].ToString());
+                    break;
+                case ControllerAction.Smt.UserLogout:
+                    result = UserLogout(parameter["tenant"].ToString(), parameter["user"].ToString(), parameter["pass"].ToString());
+                    break;
                 default:
                     break;
             }
@@ -373,6 +379,65 @@ namespace huypq.SmtMiddleware
 
             _context.SaveChanges();
 
+            return CreateOKResult();
+        }
+
+
+        public SmtActionResult TenantLogout(string user, string pass)
+        {
+            if (string.IsNullOrEmpty(user) || string.IsNullOrEmpty(pass))
+            {
+                return CreateObjectResult("user/pass cannot empty", System.Net.HttpStatusCode.BadRequest);
+            }
+
+            var tenantEntity = _context.SmtTenant.FirstOrDefault(p => p.Email == user);
+            if (tenantEntity == null)
+            {
+                return CreateObjectResult(null, System.Net.HttpStatusCode.NotFound);
+            }
+
+            var result = Crypto.PasswordHash.VerifyHashedPassword(tenantEntity.PasswordHash, pass);
+            if (result == false)
+            {
+                return CreateObjectResult("wrong password", System.Net.HttpStatusCode.BadRequest);
+            }
+
+            tenantEntity.TokenValidTime = DateTime.UtcNow.Ticks;
+            _context.Entry(tenantEntity).State = EntityState.Modified;
+
+            _context.SaveChanges();
+            return CreateOKResult();
+        }
+
+        public SmtActionResult UserLogout(string tenant, string user, string pass)
+        {
+            if (string.IsNullOrEmpty(tenant) || string.IsNullOrEmpty(user) || string.IsNullOrEmpty(pass))
+            {
+                return CreateObjectResult("user/tenantName/pass cannot empty", System.Net.HttpStatusCode.BadRequest);
+            }
+
+            var tenantEntity = _context.SmtTenant.FirstOrDefault(p => p.TenantName == tenant);
+            if (tenantEntity == null)
+            {
+                return CreateObjectResult("Tenant not found", System.Net.HttpStatusCode.NotFound);
+            }
+
+            var userEntity = _context.SmtUser.FirstOrDefault(p => p.Email == user && p.TenantID == tenantEntity.ID);
+            if (userEntity == null)
+            {
+                return CreateObjectResult("user not found", System.Net.HttpStatusCode.NotFound);
+            }
+
+            var result = Crypto.PasswordHash.VerifyHashedPassword(userEntity.PasswordHash, pass);
+            if (result == false)
+            {
+                return CreateObjectResult("wrong pass", System.Net.HttpStatusCode.BadRequest);
+            }
+
+            userEntity.TokenValidTime = DateTime.UtcNow.Ticks;
+            _context.Entry(userEntity).State = EntityState.Modified;
+
+            _context.SaveChanges();
             return CreateOKResult();
         }
 
