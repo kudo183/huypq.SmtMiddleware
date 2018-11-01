@@ -15,7 +15,7 @@ namespace huypq.SmtMiddleware
             {
                 TypeNameHandling = TypeNameHandling.Auto,
                 DateFormatHandling = DateFormatHandling.IsoDateFormat,
-                DateTimeZoneHandling = DateTimeZoneHandling.Unspecified,
+                DateTimeZoneHandling = DateTimeZoneHandling.Utc,
                 ContractResolver = new CamelCasePropertyNamesContractResolver()
             };
 
