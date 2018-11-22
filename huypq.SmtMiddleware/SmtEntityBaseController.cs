@@ -34,8 +34,16 @@ namespace huypq.SmtMiddleware
         {
             try
             {
+                var result = BeforeSave(items);
                 var changeCount = DBContext.SaveChanges();
-                AfterSave(items, changedEntities);
+                if (result == null)
+                {
+                    AfterSave(items, changedEntities);
+                }
+                else
+                {
+                    AfterSaveWithBeforeSaveResult(items, changedEntities, result);
+                }
             }
             catch (Exception ex)
             {
@@ -375,6 +383,16 @@ namespace huypq.SmtMiddleware
         protected virtual void AfterSave(List<DtoType> items, List<EntityType> changedEntities)
         {
 
+        }
+
+        protected virtual void AfterSaveWithBeforeSaveResult(List<DtoType> items, List<EntityType> changedEntities, object beforeSaveResult)
+        {
+
+        }
+
+        protected virtual object BeforeSave(List<DtoType> items)
+        {
+            return null;
         }
 
         public void Dispose()
