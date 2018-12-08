@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.IO;
 
@@ -28,6 +30,11 @@ namespace huypq.SmtMiddleware
         public HttpContext Context { get; set; }
 
         /// <summary>
+        /// 
+        /// </summary>
+        public ILogger Logger { get; set; }
+
+        /// <summary>
         /// mapping actionName to corresponding controller method, including paremeter convert.
         /// </summary>
         /// <param name="actionName"></param>
@@ -43,6 +50,7 @@ namespace huypq.SmtMiddleware
             App = app;
             Context = context;
             RequestObjectType = requestType;
+            Logger = context.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger(GetControllerName());
         }
 
         protected string GetIPAddress()
