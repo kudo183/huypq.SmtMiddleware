@@ -59,6 +59,7 @@ namespace huypq.SmtMiddleware
             _controllerNamespacePattern = controllerNamespacePattern;
             _router = new RouteHandler(SmtRouteHandler);
             TokenManager.ServiceProvider = _app.ApplicationServices;
+            _logger = _app.ApplicationServices.GetRequiredService<ILoggerFactory>().CreateLogger("SmtRoute");
         }
 
         private async Task SmtRouteHandler(HttpContext context)
@@ -90,13 +91,13 @@ namespace huypq.SmtMiddleware
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex.ToString());
                 var r = System.Text.Encoding.ASCII.GetBytes(ex.Message);
                 context.Response.StatusCode = (int)System.Net.HttpStatusCode.InternalServerError;
                 await context.Response.Body.WriteAsync(r, 0, r.Length);
                 return;
             }
             var now = DateTime.UtcNow;
-            EnsureLoggers(context);
             _logger.LogInformation(1000, "elapsed time: {a}", (now - _asyncLocalTime.Value).TotalMilliseconds);
         }
 
@@ -163,6 +164,7 @@ namespace huypq.SmtMiddleware
             }
             catch (System.Security.Cryptography.CryptographicException ex)
             {
+                _logger.LogError(ex.ToString());
                 result = new SmtActionResult
                 {
                     StatusCode = System.Net.HttpStatusCode.Unauthorized,
@@ -171,6 +173,7 @@ namespace huypq.SmtMiddleware
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex.ToString());
                 result = new SmtActionResult
                 {
                     StatusCode = System.Net.HttpStatusCode.BadRequest,
@@ -345,15 +348,6 @@ namespace huypq.SmtMiddleware
             }
 
             return false;
-        }
-
-        private void EnsureLoggers(HttpContext context)
-        {
-            if (_logger == null)
-            {
-                var factory = context.RequestServices.GetRequiredService<ILoggerFactory>();
-                _logger = factory.CreateLogger("SmtRoute");
-            }
         }
     }
 }
