@@ -29,7 +29,6 @@ namespace huypq.SmtMiddleware
 
         private IApplicationBuilder _app;
         ILogger _logger;
-        AsyncLocal<DateTime> _asyncLocalTime = new AsyncLocal<DateTime>();
 
         private string _controllerNamespacePattern;
 
@@ -64,7 +63,6 @@ namespace huypq.SmtMiddleware
 
         private async Task SmtRouteHandler(HttpContext context)
         {
-            _asyncLocalTime.Value = DateTime.UtcNow;
             try
             {
                 var routeValues = context.GetRouteData().Values;
@@ -98,7 +96,6 @@ namespace huypq.SmtMiddleware
                 return;
             }
             var now = DateTime.UtcNow;
-            _logger.LogInformation(1000, "elapsed time: {a}", (now - _asyncLocalTime.Value).TotalMilliseconds);
         }
 
         private Dictionary<string, object> GetRequestParameter(HttpRequest request)
