@@ -4,7 +4,7 @@ namespace huypq.SmtMiddleware
 {
     public sealed class SmtSettings
     {
-        private static readonly SmtSettings _instance = new SmtSettings()
+        public static SmtSettings Instance { get; } = new SmtSettings()
         {
             DefaultOrderOption = new QueryBuilder.OrderByExpression.OrderOption() { PropertyPath = nameof(IEntity.ID), IsAscending = true },
             MaxItemAllowed = 1000,
@@ -15,11 +15,6 @@ namespace huypq.SmtMiddleware
             EmailFolderPath = @"c:\emails",
             SmtFileDirectoryPath = @"c:\smtfile"
         };
-
-        public static SmtSettings Instance
-        {
-            get { return _instance; }
-        }
 
         /// <summary>
         /// SmtFile directory path
@@ -60,5 +55,10 @@ namespace huypq.SmtMiddleware
         /// Use for serialize response if Header["response"]="protobuf"
         /// </summary>
         public ISerializer BinarySerializer { get; set; }
+
+        /// <summary>
+        /// Server version, use for check if client is out of date
+        /// </summary>
+        public int ServerVersion { get; set; } = 0;
     }
 }

@@ -10,7 +10,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using huypq.SmtShared.Constant;
 using Microsoft.Extensions.Logging;
-using System.Threading;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace huypq.SmtMiddleware
@@ -68,6 +67,20 @@ namespace huypq.SmtMiddleware
                 var routeValues = context.GetRouteData().Values;
                 var controller = routeValues["controller"]?.ToString().ToLower();
                 var action = routeValues["action"]?.ToString().ToLower();
+
+                if (context.Request.Headers["server-version"].Count == 1)
+                {
+                    if (int.TryParse(context.Request.Headers["server-version"][0], out int version) == false
+                        || version < SmtSettings.Instance.ServerVersion)
+                    {
+                        await WriteResponse(context.Response, "", new SmtActionResult()
+                        {
+                            StatusCode = System.Net.HttpStatusCode.Gone,
+                            ResultValue = null
+                        });
+                        return;
+                    }
+                }
 
                 var parameter = GetRequestParameter(context.Request);
 
