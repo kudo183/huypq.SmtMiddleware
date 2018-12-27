@@ -173,6 +173,11 @@ namespace huypq.SmtMiddleware
 
         protected SmtActionResult GetUpdate(QueryExpression filter, IQueryable<EntityType> includedQuery)
         {
+            if (IsSupportGetUpdate() == false)
+            {
+                return CreateObjectResult(null, System.Net.HttpStatusCode.NotImplemented);
+            }
+
             if (filter == null)
             {
                 var msg = string.Format(string.Format("Need specify {0} where options", nameof(IDto.LastUpdateTime)));
@@ -267,13 +272,7 @@ namespace huypq.SmtMiddleware
                         if (entity.TenantID == TokenModel.TenantID)
                         {
                             DBContext.Set<EntityType>().Remove(entity);
-                            DBContext.SmtDeletedItem.Add(new SmtDeletedItem()
-                            {
-                                TenantID = TokenModel.TenantID,
-                                DeletedID = entity.ID,
-                                TableID = tableID,
-                                CreateTime = now
-                            });
+                            AddSmtDeletedItemEntry(entity.ID, tableID, now);
                             changedEntities.Add(entity);
                         }
                         break;
@@ -373,30 +372,22 @@ namespace huypq.SmtMiddleware
         protected SmtActionResult Delete(EntityType entity)
         {
             var tableName = GetTableName();
+            var tableID = DBContext.SmtTable.FirstOrDefault(p => p.TableName == tableName).ID;
             DBContext.Set<EntityType>().Remove(entity);
-            DBContext.SmtDeletedItem.Add(new SmtDeletedItem()
-            {
-                TenantID = TokenModel.TenantID,
-                DeletedID = entity.ID,
-                TableID = DBContext.SmtTable.FirstOrDefault(p => p.TableName == tableName).ID,
-                CreateTime = DateTime.UtcNow.Ticks
-            });
+            var now = DateTime.UtcNow.Ticks;
+            AddSmtDeletedItemEntry(entity.ID, tableID, now);
             return SaveChanges(new List<DtoType>(), new List<EntityType>() { entity });
         }
 
         protected SmtActionResult Delete(List<EntityType> entities)
         {
             var tableName = GetTableName();
+            var tableID = DBContext.SmtTable.FirstOrDefault(p => p.TableName == tableName).ID;
             DBContext.Set<EntityType>().RemoveRange(entities);
+            var now = DateTime.UtcNow.Ticks;
             foreach (var entity in entities)
             {
-                DBContext.SmtDeletedItem.Add(new SmtDeletedItem()
-                {
-                    TenantID = TokenModel.TenantID,
-                    DeletedID = entity.ID,
-                    TableID = DBContext.SmtTable.FirstOrDefault(p => p.TableName == tableName).ID,
-                    CreateTime = DateTime.UtcNow.Ticks
-                });
+                AddSmtDeletedItemEntry(entity.ID, tableID, now);
             }
             return SaveChanges(new List<DtoType>(), entities);
         }
@@ -414,6 +405,27 @@ namespace huypq.SmtMiddleware
         protected virtual object BeforeSave(List<DtoType> items)
         {
             return null;
+        }
+
+        protected virtual bool IsSupportGetUpdate()
+        {
+            return false;
+        }
+
+        private void AddSmtDeletedItemEntry(int entityID, int tableID, long now)
+        {
+            if (IsSupportGetUpdate() == false)
+            {
+                return;
+            }
+
+            DBContext.SmtDeletedItem.Add(new SmtDeletedItem()
+            {
+                TenantID = TokenModel.TenantID,
+                DeletedID = entityID,
+                TableID = tableID,
+                CreateTime = now
+            });
         }
 
         public void Dispose()
