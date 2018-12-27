@@ -327,17 +327,7 @@ namespace huypq.SmtMiddleware
             {
                 return CreateObjectResult("wrong Tenant", System.Net.HttpStatusCode.BadRequest);
             }
-
-            var tableName = GetTableName();
-            DBContext.Set<EntityType>().Remove(entity);
-            DBContext.SmtDeletedItem.Add(new SmtDeletedItem()
-            {
-                TenantID = TokenModel.TenantID,
-                DeletedID = entity.ID,
-                TableID = DBContext.SmtTable.FirstOrDefault(p => p.TableName == tableName).ID,
-                CreateTime = DateTime.UtcNow.Ticks
-            });
-            return SaveChanges(new List<DtoType>() { dto }, new List<EntityType>() { entity });
+            return Delete(entity);
         }
         #endregion
 
@@ -378,6 +368,37 @@ namespace huypq.SmtMiddleware
         protected virtual void UpdateEntity(ContextType context, EntityType entity)
         {
             context.Entry(entity).State = EntityState.Modified;
+        }
+
+        protected SmtActionResult Delete(EntityType entity)
+        {
+            var tableName = GetTableName();
+            DBContext.Set<EntityType>().Remove(entity);
+            DBContext.SmtDeletedItem.Add(new SmtDeletedItem()
+            {
+                TenantID = TokenModel.TenantID,
+                DeletedID = entity.ID,
+                TableID = DBContext.SmtTable.FirstOrDefault(p => p.TableName == tableName).ID,
+                CreateTime = DateTime.UtcNow.Ticks
+            });
+            return SaveChanges(new List<DtoType>(), new List<EntityType>() { entity });
+        }
+
+        protected SmtActionResult Delete(List<EntityType> entities)
+        {
+            var tableName = GetTableName();
+            DBContext.Set<EntityType>().RemoveRange(entities);
+            foreach (var entity in entities)
+            {
+                DBContext.SmtDeletedItem.Add(new SmtDeletedItem()
+                {
+                    TenantID = TokenModel.TenantID,
+                    DeletedID = entity.ID,
+                    TableID = DBContext.SmtTable.FirstOrDefault(p => p.TableName == tableName).ID,
+                    CreateTime = DateTime.UtcNow.Ticks
+                });
+            }
+            return SaveChanges(new List<DtoType>(), entities);
         }
 
         protected virtual void AfterSave(List<DtoType> items, List<EntityType> changedEntities)
