@@ -50,7 +50,7 @@ namespace huypq.SmtMiddleware
 
                     return FromBase64(base64PlainToken);
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     return null;
                 }
@@ -152,7 +152,7 @@ namespace huypq.SmtMiddleware
 
                     return FromBase64(base64PlainToken);
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     return null;
                 }
