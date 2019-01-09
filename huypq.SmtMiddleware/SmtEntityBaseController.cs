@@ -8,6 +8,7 @@ using huypq.SmtShared;
 using huypq.SmtShared.Constant;
 using huypq.QueryBuilder;
 using huypq.SmtMiddleware.Entities;
+using Microsoft.Extensions.Logging;
 
 namespace huypq.SmtMiddleware
 {
@@ -30,6 +31,21 @@ namespace huypq.SmtMiddleware
             return typeof(EntityType).Name;
         }
 
+        protected SmtActionResult SaveChanges()
+        {
+            try
+            {
+                var changeCount = DBContext.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(0, ex, "SaveChanges");
+                return CreateObjectResult(null, System.Net.HttpStatusCode.InternalServerError);
+            }
+            //need return an json object, if just return status code, jquery will treat as fail.
+            return CreateOKResult();
+        }
+
         protected SmtActionResult SaveChanges(List<DtoType> items, List<EntityType> changedEntities)
         {
             try
@@ -47,7 +63,8 @@ namespace huypq.SmtMiddleware
             }
             catch (Exception ex)
             {
-                return CreateObjectResult(ex.InnerException.Message, System.Net.HttpStatusCode.InternalServerError);
+                Logger.LogError(0, ex, "SaveChanges");
+                return CreateObjectResult(null, System.Net.HttpStatusCode.InternalServerError);
             }
             //need return an json object, if just return status code, jquery will treat as fail.
             return CreateOKResult();
@@ -366,7 +383,15 @@ namespace huypq.SmtMiddleware
 
         protected virtual void UpdateEntity(ContextType context, EntityType entity)
         {
+            //mark all properties of entity as Modified, 
             context.Entry(entity).State = EntityState.Modified;
+            //need set what [property] is unmodified
+            //context.Entry(entity).Property(p => p.[property]).IsModified = false;
+
+            //mark all properties of entity as Unchanged
+            //context.Attach(entity);
+            //need set what[property] is modified
+            //context.Entry(entity).Property(p => p.[property]).IsModified = true;
         }
 
         protected SmtActionResult Delete(EntityType entity)
