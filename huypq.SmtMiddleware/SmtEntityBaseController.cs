@@ -209,12 +209,11 @@ namespace huypq.SmtMiddleware
             }
 
             var query = includedQuery;
-            var tableName = GetTableName();
             var result = new PagingResultDto<DtoType>
             {
                 Items = new List<DtoType>()
             };
-            var tableID = DBContext.SmtTable.FirstOrDefault(p => p.TableName == tableName).ID;
+            var tableID = GetTableID();
 
             query = WhereExpression.AddWhereExpression(query, filter.WhereOptions);
             //query = OrderByExpression.AddOrderByExpression(query, filter.OrderOptions); //must order in client for perfomance
@@ -257,11 +256,21 @@ namespace huypq.SmtMiddleware
             return CreateObjectResult(ConvertToDto(entity));
         }
 
+        protected int GetTableID()
+        {
+            if (IsSupportGetUpdate() == false)
+                return 0;
+
+            var tableName = GetTableName();
+            var tableID = DBContext.SmtTable.FirstOrDefault(p => p.TableName == tableName).ID;
+            return tableID;
+        }
+
         protected SmtActionResult Save(List<DtoType> items)
         {
             List<EntityType> changedEntities = new List<EntityType>();
-            var tableName = GetTableName();
-            var tableID = DBContext.SmtTable.FirstOrDefault(p => p.TableName == tableName).ID;
+
+            var tableID = GetTableID();
             var now = DateTime.UtcNow.Ticks;
 
             foreach (var dto in items)
@@ -396,8 +405,7 @@ namespace huypq.SmtMiddleware
 
         protected SmtActionResult Delete(EntityType entity)
         {
-            var tableName = GetTableName();
-            var tableID = DBContext.SmtTable.FirstOrDefault(p => p.TableName == tableName).ID;
+            var tableID = GetTableID();
             DBContext.Set<EntityType>().Remove(entity);
             var now = DateTime.UtcNow.Ticks;
             AddSmtDeletedItemEntry(entity.ID, tableID, now);
@@ -406,8 +414,7 @@ namespace huypq.SmtMiddleware
 
         protected SmtActionResult Delete(List<EntityType> entities)
         {
-            var tableName = GetTableName();
-            var tableID = DBContext.SmtTable.FirstOrDefault(p => p.TableName == tableName).ID;
+            var tableID = GetTableID();
             DBContext.Set<EntityType>().RemoveRange(entities);
             var now = DateTime.UtcNow.Ticks;
             foreach (var entity in entities)
