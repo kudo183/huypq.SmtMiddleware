@@ -65,5 +65,15 @@ namespace huypq.SmtMiddleware
         /// Google client id for open id token check
         /// </summary>
         public string GoogleClientID { get; set; }
+
+        /// <summary>
+        /// Facebook AppSecret for token check
+        /// </summary>
+        public string FacebookAppSecret { get; set; }
+
+        /// <summary>
+        /// Facebook UserInfo EndPoint for token check and email
+        /// </summary>
+        public string FacebookUserInfoEndPoint { get; set; }
     }
 }

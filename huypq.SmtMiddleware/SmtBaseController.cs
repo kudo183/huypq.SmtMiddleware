@@ -5,7 +5,11 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Net.Http;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace huypq.SmtMiddleware
@@ -181,6 +185,28 @@ namespace huypq.SmtMiddleware
                             return CreateObjectResult("invalid token", System.Net.HttpStatusCode.BadRequest);
                         }
                         user = validPayload.Email;
+                    }
+                    break;
+                case "facebook":
+                    {
+                        using (var algorithm = new HMACSHA256(Encoding.ASCII.GetBytes(SmtSettings.Instance.FacebookAppSecret)))
+                        {
+                            var hash = algorithm.ComputeHash(Encoding.ASCII.GetBytes(idToken));
+                            var builder = new StringBuilder();
+                            for (int i = 0; i < hash.Length; i++)
+                            {
+                                builder.Append(hash[i].ToString("x2", CultureInfo.InvariantCulture));
+                            }
+                            var appsecret_proof = builder.ToString();
+                            using (HttpClient client = new HttpClient())
+                            {
+                                var response = await client.GetAsync(SmtSettings.Instance.FacebookUserInfoEndPoint + "?fields=email&access_token=" + idToken + "&appsecret_proof=" + appsecret_proof);
+                                if (response.IsSuccessStatusCode == true)
+                                {
+                                    user = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, string>>(await response.Content.ReadAsStringAsync())["email"];
+                                }
+                            }
+                        }
                     }
                     break;
             }
