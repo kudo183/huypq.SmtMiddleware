@@ -60,5 +60,10 @@ namespace huypq.SmtMiddleware
         /// Server version, use for check if client is out of date
         /// </summary>
         public int ServerVersion { get; set; } = 0;
+
+        /// <summary>
+        /// Google client id for open id token check
+        /// </summary>
+        public string GoogleClientID { get; set; }
     }
 }

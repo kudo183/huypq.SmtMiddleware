@@ -1,4 +1,5 @@
-﻿using huypq.SmtShared.Constant;
+﻿using Google.Apis.Auth;
+using huypq.SmtShared.Constant;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -35,6 +36,9 @@ namespace huypq.SmtMiddleware
                     break;
                 case ControllerAction.Smt.TenantLogin:
                     result = TenantLogin(parameter["user"].ToString(), parameter["pass"].ToString());
+                    break;
+                case ControllerAction.Smt.TenantLoginWithIdToken:
+                    result = TenantLoginWithIdTokenAsync(parameter).Result;
                     break;
                 case ControllerAction.Smt.UserLogin:
                     result = UserLogin(parameter["tenant"].ToString(), parameter["user"].ToString(), parameter["pass"].ToString());
@@ -149,6 +153,57 @@ namespace huypq.SmtMiddleware
             if (result == false)
             {
                 return CreateObjectResult("wrong password", System.Net.HttpStatusCode.BadRequest);
+            }
+
+            var token = new TokenManager.LoginToken() { TenantName = tenantEntity.TenantName, TenantID = tenantEntity.ID };
+            token.Claims.Add("*", new List<string>());
+            return CreateObjectResult(TokenManager.LoginToken.CreateTokenString(token));
+        }
+
+        public async System.Threading.Tasks.Task<SmtActionResult> TenantLoginWithIdTokenAsync(Dictionary<string, object> parameter)
+        {
+            var idToken = parameter["idtoken"].ToString();
+            var provider = parameter["provider"].ToString();
+
+            if (string.IsNullOrEmpty(idToken) || string.IsNullOrEmpty(provider))
+            {
+                return CreateObjectResult("idToken/provider cannot empty", System.Net.HttpStatusCode.BadRequest);
+            }
+
+            string user = "";
+            switch (provider)
+            {
+                case "google":
+                    {
+                        var validPayload = await GoogleJsonWebSignature.ValidateAsync(idToken);
+                        if (validPayload.Audience.ToString() != SmtSettings.Instance.GoogleClientID)
+                        {
+                            return CreateObjectResult("invalid token", System.Net.HttpStatusCode.BadRequest);
+                        }
+                        user = validPayload.Email;
+                    }
+                    break;
+            }
+
+            var tenantEntity = _context.SmtTenant.FirstOrDefault(p => p.Email == user);
+            if (tenantEntity == null)
+            {
+                tenantEntity = new TenantEntityType()
+                {
+                    Email = user,
+                    PasswordHash = string.Empty,
+                    CreateDate = DateTime.UtcNow,
+                    TenantName = user,
+                    TokenValidTime = DateTime.UtcNow.Ticks
+                };
+                _context.SmtTenant.Add(tenantEntity);
+
+                _context.SaveChanges();
+            }
+
+            if (tenantEntity.IsLocked == true)
+            {
+                return CreateObjectResult("User is locked", System.Net.HttpStatusCode.BadRequest);
             }
 
             var token = new TokenManager.LoginToken() { TenantName = tenantEntity.TenantName, TenantID = tenantEntity.ID };

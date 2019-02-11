@@ -35,6 +35,7 @@ namespace huypq.SmtMiddleware
         {
             ControllerAction.Smt.Register,
             ControllerAction.Smt.TenantLogin,
+            ControllerAction.Smt.TenantLoginWithIdToken,
             ControllerAction.Smt.UserLogin,
             ControllerAction.Smt.TenantRequestToken,
             ControllerAction.Smt.UserRequestToken,
