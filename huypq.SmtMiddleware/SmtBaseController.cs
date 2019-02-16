@@ -180,7 +180,7 @@ namespace huypq.SmtMiddleware
                 case "google":
                     {
                         var validPayload = await GoogleJsonWebSignature.ValidateAsync(idToken);
-                        if (validPayload.Audience.ToString() != SmtSettings.Instance.GoogleClientID)
+                        if (SmtSettings.Instance.GoogleClientIDs.Contains(validPayload.Audience.ToString()) == false)
                         {
                             return CreateObjectResult("invalid token", System.Net.HttpStatusCode.BadRequest);
                         }
