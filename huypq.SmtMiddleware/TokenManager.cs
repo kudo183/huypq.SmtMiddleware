@@ -128,6 +128,11 @@ namespace huypq.SmtMiddleware
             /// </summary>
             public Dictionary<string, List<string>> Claims { get; set; }
 
+            /// <summary>
+            /// Raw Token
+            /// </summary>
+            public string RawToken { get; set; }
+
             public LoginToken()
             {
                 CreateTime = DateTime.UtcNow.Ticks;
@@ -150,7 +155,9 @@ namespace huypq.SmtMiddleware
                     var protector = GetProtector(Purpose);
                     var base64PlainToken = protector.Unprotect(token);
 
-                    return FromBase64(base64PlainToken);
+                    var result = FromBase64(base64PlainToken);
+                    result.RawToken = token;
+                    return result;
                 }
                 catch (Exception)
                 {
