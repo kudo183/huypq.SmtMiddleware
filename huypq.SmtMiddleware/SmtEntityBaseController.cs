@@ -352,7 +352,7 @@ namespace huypq.SmtMiddleware
             {
                 return CreateObjectResult("wrong Tenant", System.Net.HttpStatusCode.BadRequest);
             }
-            return Delete(entity);
+            return Delete(dto, entity);
         }
         #endregion
 
@@ -403,16 +403,16 @@ namespace huypq.SmtMiddleware
             //context.Entry(entity).Property(p => p.[property]).IsModified = true;
         }
 
-        protected SmtActionResult Delete(EntityType entity)
+        protected SmtActionResult Delete(DtoType dto, EntityType entity)
         {
             var tableID = GetTableID();
             DBContext.Set<EntityType>().Remove(entity);
             var now = DateTime.UtcNow.Ticks;
             AddSmtDeletedItemEntry(entity.ID, tableID, now);
-            return SaveChanges(new List<DtoType>(), new List<EntityType>() { entity });
+            return SaveChanges(new List<DtoType>() { dto }, new List<EntityType>() { entity });
         }
 
-        protected SmtActionResult Delete(List<EntityType> entities)
+        protected SmtActionResult Delete(List<DtoType> dtos, List<EntityType> entities)
         {
             var tableID = GetTableID();
             DBContext.Set<EntityType>().RemoveRange(entities);
@@ -421,7 +421,7 @@ namespace huypq.SmtMiddleware
             {
                 AddSmtDeletedItemEntry(entity.ID, tableID, now);
             }
-            return SaveChanges(new List<DtoType>(), entities);
+            return SaveChanges(dtos, entities);
         }
 
         protected virtual void AfterSave(List<DtoType> items, List<EntityType> changedEntities)
