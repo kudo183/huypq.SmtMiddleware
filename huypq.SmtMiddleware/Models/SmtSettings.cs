@@ -13,7 +13,8 @@ namespace huypq.SmtMiddleware
             JsonSerializer = new SmtJsonSerializer(),
             BinarySerializer = new SmtProtobufSerializer(),
             EmailFolderPath = @"c:\emails",
-            SmtFileDirectoryPath = @"c:\smtfile"
+            SmtFileDirectoryPath = @"c:\smtfile",
+            SkipTenantFilterTables = new List<string>()
         };
 
         /// <summary>
@@ -75,5 +76,10 @@ namespace huypq.SmtMiddleware
         /// Facebook UserInfo EndPoint for token check and email
         /// </summary>
         public string FacebookUserInfoEndPoint { get; set; }
+
+        /// <summary>
+        /// Specify list of table which allow get all data without tenantID check
+        /// </summary>
+        public List<string> SkipTenantFilterTables { get; set; }
     }
 }

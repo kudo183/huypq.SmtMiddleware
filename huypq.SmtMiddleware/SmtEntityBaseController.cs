@@ -361,6 +361,10 @@ namespace huypq.SmtMiddleware
 
         protected virtual IQueryable<EntityType> GetQuery()
         {
+            if (SmtSettings.Instance.SkipTenantFilterTables.Contains(GetTableName()) == true)
+            {
+                return DBContext.Set<EntityType>();
+            }
             return DBContext.Set<EntityType>().Where(p => p.TenantID == TokenModel.TenantID);
         }
 
