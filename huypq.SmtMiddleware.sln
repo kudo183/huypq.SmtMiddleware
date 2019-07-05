@@ -1,15 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26430.15
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29025.244
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "huypq.SmtMiddleware", "huypq.SmtMiddleware\huypq.SmtMiddleware.csproj", "{F781598F-5F5D-4C1C-871A-B8592E425BCB}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "huypq.SmtShared", "..\huypq.SmtShared\huypq.SmtShared\huypq.SmtShared.csproj", "{BBBBE5D0-4B18-4F44-B75C-E67199541417}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "huypq.Crypto", "..\huypq.dotnet.lib\huypq.Crypto\huypq.Crypto\huypq.Crypto.csproj", "{AD7F8798-FD3A-4A6C-B20D-B83D6A403E78}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "huypq.QueryBuilder", "..\huypq.dotnet.lib\huypq.QueryBuilder\huypq.QueryBuilder\huypq.QueryBuilder.csproj", "{F3FCC58E-034C-4B29-A5A5-C754B17FD650}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "huypq.SmtShared.NETStandard", "..\huypq.SmtShared\huypq.SmtShared.NETStandard\huypq.SmtShared.NETStandard.csproj", "{42B411F9-373C-4DDD-96C4-B78FD99FCBF5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,10 +21,6 @@ Global
 		{F781598F-5F5D-4C1C-871A-B8592E425BCB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F781598F-5F5D-4C1C-871A-B8592E425BCB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F781598F-5F5D-4C1C-871A-B8592E425BCB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{BBBBE5D0-4B18-4F44-B75C-E67199541417}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BBBBE5D0-4B18-4F44-B75C-E67199541417}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BBBBE5D0-4B18-4F44-B75C-E67199541417}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{BBBBE5D0-4B18-4F44-B75C-E67199541417}.Release|Any CPU.Build.0 = Release|Any CPU
 		{AD7F8798-FD3A-4A6C-B20D-B83D6A403E78}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{AD7F8798-FD3A-4A6C-B20D-B83D6A403E78}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AD7F8798-FD3A-4A6C-B20D-B83D6A403E78}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -33,8 +29,15 @@ Global
 		{F3FCC58E-034C-4B29-A5A5-C754B17FD650}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F3FCC58E-034C-4B29-A5A5-C754B17FD650}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F3FCC58E-034C-4B29-A5A5-C754B17FD650}.Release|Any CPU.Build.0 = Release|Any CPU
+		{42B411F9-373C-4DDD-96C4-B78FD99FCBF5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{42B411F9-373C-4DDD-96C4-B78FD99FCBF5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{42B411F9-373C-4DDD-96C4-B78FD99FCBF5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{42B411F9-373C-4DDD-96C4-B78FD99FCBF5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {05E32BD9-4223-40A6-9719-C9DEF67B7207}
 	EndGlobalSection
 EndGlobal

@@ -16,7 +16,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\huypq.dotnet.lib\huypq.Crypto\huypq.Crypto\huypq.Crypto.csproj" />
     <ProjectReference Include="..\..\huypq.dotnet.lib\huypq.QueryBuilder\huypq.QueryBuilder\huypq.QueryBuilder.csproj" />
-    <ProjectReference Include="..\..\huypq.SmtShared\huypq.SmtShared\huypq.SmtShared.csproj" />
+    <ProjectReference Include="..\..\huypq.SmtShared\huypq.SmtShared.NETStandard\huypq.SmtShared.NETStandard.csproj" />
   </ItemGroup>
 
 </Project>
