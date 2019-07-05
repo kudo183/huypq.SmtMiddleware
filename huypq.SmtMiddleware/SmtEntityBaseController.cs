@@ -164,6 +164,11 @@ namespace huypq.SmtMiddleware
 
         protected SmtActionResult GetAll(QueryExpression filter, IQueryable<EntityType> includedQuery)
         {
+            if (SmtSettings.Instance.AllowGetAllTables.Contains(GetTableName()) == false)
+            {
+                return CreateObjectResult("", System.Net.HttpStatusCode.Forbidden);
+            }
+
             var query = includedQuery;
             var result = new PagingResultDto<DtoType>
             {

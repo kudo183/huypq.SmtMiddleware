@@ -78,8 +78,13 @@ namespace huypq.SmtMiddleware
         public string FacebookUserInfoEndPoint { get; set; }
 
         /// <summary>
-        /// Specify list of table which allow get all data without tenantID check
+        /// Specify list of table which allow get all data without tenantID check (no .Where(p => p.TenantID == TokenModel.TenantID))
         /// </summary>
         public List<string> SkipTenantFilterTables { get; set; }
+
+        /// <summary>
+        /// Specify list of table which allow GetAll action (no MaxItemAllowed check)
+        /// </summary>
+        public List<string> AllowGetAllTables { get; set; }
     }
 }
