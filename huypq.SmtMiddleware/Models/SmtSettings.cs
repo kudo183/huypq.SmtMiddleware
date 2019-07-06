@@ -14,7 +14,8 @@ namespace huypq.SmtMiddleware
             BinarySerializer = new SmtProtobufSerializer(),
             EmailFolderPath = @"c:\emails",
             SmtFileDirectoryPath = @"c:\smtfile",
-            SkipTenantFilterTables = new List<string>()
+            SkipTenantFilterTables = new List<string>(),
+            AllowGetAllTables = new List<string>()
         };
 
         /// <summary>
