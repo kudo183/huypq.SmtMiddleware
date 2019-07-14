@@ -118,6 +118,8 @@ namespace huypq.SmtMiddleware
 
             public bool IsTenant { get { return UserID == 0; } }
 
+            public bool IsRoot { get { return TenantID == 1 && UserID == 0; } }
+
             /// <summary>
             /// Token creation time
             /// </summary>
